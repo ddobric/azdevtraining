@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2035
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunctionApp3", "FunctionApp3\FunctionApp3.csproj", "{6FF1CD15-579F-4080-B697-DD7E0274E506}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunctionApp.Net", "FunctionApp.Net\FunctionApp.Net.csproj", "{2BB465D7-BA11-45E7-A992-3AA34E6106DE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6FF1CD15-579F-4080-B697-DD7E0274E506}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FF1CD15-579F-4080-B697-DD7E0274E506}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FF1CD15-579F-4080-B697-DD7E0274E506}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FF1CD15-579F-4080-B697-DD7E0274E506}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BB465D7-BA11-45E7-A992-3AA34E6106DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BB465D7-BA11-45E7-A992-3AA34E6106DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BB465D7-BA11-45E7-A992-3AA34E6106DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BB465D7-BA11-45E7-A992-3AA34E6106DE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {254FB0C8-E72D-425F-982B-B67BDD9DBC06}
+	EndGlobalSection
+EndGlobal
