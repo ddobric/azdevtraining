@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WebApi</name>
+    </assembly>
+    <members>
+        <member name="T:WebApi.Controllers.WeatherForecastController">
+            <summary>
+            Waether Forecast Demo Service.
+            </summary>
+        </member>
+        <member name="M:WebApi.Controllers.WeatherForecastController.Get">
+            <summary>
+            Get forecast.
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
