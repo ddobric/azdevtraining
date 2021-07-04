@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,6 +29,7 @@ namespace EventHubReceiver
             try
             {
                 using CancellationTokenSource cancellationSource = new CancellationTokenSource();
+
                 cancellationSource.CancelAfter(TimeSpan.FromSeconds(300));
 
                 DateTimeOffset oneHourAgo = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromHours(1));
@@ -45,9 +47,10 @@ namespace EventHubReceiver
                     cancellationSource.Token))
                     {
                         string readFromPartition = partitionEvent.Partition.PartitionId;
-                        byte[] eventBodyBytes = partitionEvent.Data.EventBody.ToArray();
 
-                        Console.WriteLine($"Read event of length { eventBodyBytes.Length } from { readFromPartition }");
+                        byte[] payload = partitionEvent.Data.EventBody.ToArray();
+                        
+                        Console.WriteLine($"Read event of length { payload.Length } from { readFromPartition }. Event: {UTF8Encoding.UTF8.GetString(payload)}");
                     }
                 }
             }
