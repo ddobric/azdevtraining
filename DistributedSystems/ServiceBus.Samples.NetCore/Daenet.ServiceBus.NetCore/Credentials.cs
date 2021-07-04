@@ -9,10 +9,13 @@ namespace Daenet.ServiceBus.NetCore
 {
     public class Credentials
     {
-        private static string m_SbConnStr = "Endpoint=sb://aaaaaaaaaaaaaa.servicebus.windows.net/;SharedAccessKeyName=demo;SharedAccessKey=NEW0MqWB10ZNN1I5XfL1lA/iqmJ9ENL7ZXTbEaPA5P8=";
+        private static string m_SbConnStr = "Endpoint=sb://aztraining.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=F2PnTnhDBlqyxhXGUETxqhcq12+o2aD6t+HF51cL9WI=";
 
         static Credentials()
         {
+            if (m_SbConnStr != null)
+                return;
+
             var builder = new ConfigurationBuilder();
             var env = Environment.GetEnvironmentVariable("AzAppConfig");
             if (env != null)
