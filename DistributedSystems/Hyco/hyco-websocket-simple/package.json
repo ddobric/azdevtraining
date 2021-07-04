@@ -1,0 +1,25 @@
+{
+  "author": "damir",
+  "name": "hypotst",
+  "version": "1.1.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/clemensv/azure-hybridconnections.git"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "description": "This sample illustrates how to use the 'hyco-websocket' derivative of the 'websocket' Node \r package. Unlike the sample inside the package code, this variant builds on the \r published NPM package.",
+  "bugs": {
+    "url": "https://github.com/clemensv/azure-hybridconnections/issues"
+  },
+  "homepage": "https://github.com/clemensv/azure-hybridconnections#readme",
+  "dependencies": {
+    "hyco-websocket": "latest",
+    "wait.for": "latest"
+  },
+  "main": "listener.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "UNLICENSED"
+}

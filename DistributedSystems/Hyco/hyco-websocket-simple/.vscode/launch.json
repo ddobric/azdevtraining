@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible Node.js debug attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Listener",
+            "program": "${workspaceRoot}\\listener.js",
+            "args": [
+                "sagerelay.servicebus.windows.net",
+                "hybridrelay",
+                "send_listen",
+                 "1Pm7JWL94IXhVxxB9/HfoHbBWp0VvIk3Htv1r3bhatc="
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Sender",
+            "program": "${workspaceRoot}\\sender.js",
+            "args": [
+                "sagerelay.servicebus.windows.net",
+                "hybridrelay",
+                "send_listen",
+                 "1Pm7JWL94IXhVxxB9/HfoHbBWp0VvIk3Htv1r3bhatc="
+            ]
+        }
+    ]
+}

@@ -1,0 +1,8 @@
+{
+  "TenantId": "",
+  "ClientId": "",
+  "ClientSecret": "",
+  "SubscriptionId": "",
+  "DataCenterLocation": "West Europe",
+  "ServiceBusSku": "Standard"
+}

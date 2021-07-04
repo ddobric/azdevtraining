@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible Node.js debug attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "C:\\Program Files\\nodejs (chakracore)\\node.exe",
+          
+            "name": "launch Listener.js",
+            "program": "${workspaceRoot}/listener.js",
+            //"program": "C:/Users/ddobric.DAENET/OneDrive/Documents/Sessions/MeetUps/2016/Azure Meetup Frankfurt/Hyco/hyco-ws-simple/listener.js",
+             "args": [
+                 "relaytunnel.servicebus.windows.net",
+                 "Relay1",
+                 "Listen",
+                 "KSAgZI+TXSZswGGw975PVq8nbaW6GlcI30lBvMsv6qE="
+             ],
+            "cwd": "${workspaceRoot}",
+             "stopOnEntry": true,
+             "runtimeArgs": [
+               
+             ]
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to Process",
+            "port": 5858
+        }
+    ]
+}
