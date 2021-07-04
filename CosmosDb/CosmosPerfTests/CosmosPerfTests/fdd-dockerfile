@@ -1,0 +1,10 @@
+﻿FROM microsoft/dotnet
+ARG EXE_DIR=. 
+WORKDIR /app 
+COPY $EXE_DIR/ ./ 
+#CMD ["./dotnet", "./cosmosperftests.dll"] 
+# ENTRYPOINT ["dotnet", "cosmosperftests.dll"]
+ENTRYPOINT ["dotnet", "./CosmosPerfTests.dll"]
+
+# Run following command to build image
+#docker build --build-arg EXE_DIR=./bin/Debug/netcoreapp2.0/publish -t cosmosperftests:latest .

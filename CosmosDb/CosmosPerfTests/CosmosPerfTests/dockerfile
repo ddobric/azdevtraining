@@ -1,0 +1,26 @@
+﻿#
+# Create build image with dotnet SDK and build solution inside of image
+#
+FROM microsoft/dotnet AS build-sdk-env
+ARG EXE_DIR=. 
+WORKDIR /app 
+RUN echo '**' build-sdk-env
+# copy csproj and restore as distinct layers
+COPY *.csproj ./
+RUN dotnet restore
+
+# copy everything else and build
+COPY . ./
+
+RUN dotnet publish -c Release -o out
+
+# build runtime image by using output in previously built image.
+FROM microsoft/dotnet:2.0-runtime 
+WORKDIR /app
+COPY --from=build-sdk-env /app/out ./
+
+ENTRYPOINT ["dotnet", "./CosmosPerfTests.dll"]
+
+
+# Run following command to build image
+# docker build -t cosmosperftests:latest .
