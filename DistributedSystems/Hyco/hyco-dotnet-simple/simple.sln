@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26823.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{5C198DDB-6A17-4CBA-998E-15E9858505EB}"
 EndProject
@@ -10,6 +10,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceNetCore", "ServiceNetCore\ServiceNetCore.csproj", "{DE9AEDEF-B5AA-406E-ABD0-4019C68AF210}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientNetCore", "ClientNetCore\ClientNetCore.csproj", "{1DE1AD77-44A3-419E-8DB3-150328D0A793}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DotNet", "DotNet", "{53687383-7CAB-4894-A25E-1FFF8574DF79}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DotNetCore", "DotNetCore", "{FB8872CB-5C30-40E6-8115-A38E84539A33}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +40,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5C198DDB-6A17-4CBA-998E-15E9858505EB} = {53687383-7CAB-4894-A25E-1FFF8574DF79}
+		{4E5E575B-EA3F-4B40-BBB9-C3B5F6D19B6B} = {53687383-7CAB-4894-A25E-1FFF8574DF79}
+		{DE9AEDEF-B5AA-406E-ABD0-4019C68AF210} = {FB8872CB-5C30-40E6-8115-A38E84539A33}
+		{1DE1AD77-44A3-419E-8DB3-150328D0A793} = {FB8872CB-5C30-40E6-8115-A38E84539A33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {17B04102-CF6E-45CB-8378-3DD118C16893}
