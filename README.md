@@ -42,13 +42,9 @@ You will first learn about platform evolution, lift-and shift scenarios, which h
 - Logic Apps
 
 #### Designing Distributed Systems 
-- Messaging Services
+- Architecture styles, Iteraction patterns, Messaging,..
+- Services and Microservices
 - Azure Service Bus 
-- Integration Patterns
-- Point to Point
-- Pub Sub
-- Competing Consumer scenarios
-
 
 ### DAY III
 
@@ -58,6 +54,7 @@ You will first learn about platform evolution, lift-and shift scenarios, which h
 - Event Hub 
 - EventGrid 
 - dapr
+- Tye
 
 #### PaaS Databases 
 - Making the right decision: SQL or No SQL?
