@@ -56,7 +56,7 @@ namespace BlobStorageSamples
             finally
             {
                 // Clean up after the test when we're finished
-                await container.DeleteAsync();
+                //await container.DeleteAsync();
 
             }
         }
