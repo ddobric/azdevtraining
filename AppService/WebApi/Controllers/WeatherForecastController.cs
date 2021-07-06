@@ -27,7 +27,7 @@ namespace WebApi.Controllers
         }
 
         /// <summary>
-        /// Get forecast.
+        /// Hallo this is my WebApi Service - Get forecast. To call me please bla, bla....
         /// </summary>
         /// <returns></returns>
         [HttpGet]
