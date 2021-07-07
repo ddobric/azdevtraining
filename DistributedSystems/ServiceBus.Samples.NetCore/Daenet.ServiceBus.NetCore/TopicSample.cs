@@ -62,6 +62,8 @@ namespace Daenet.ServiceBus.NetCore
                     // In this sample, subscription filter is used
                     message.UserProperties.Add("Number", num);
 
+                    message.UserProperties.Add("Code", 2);
+
                     message.TimeToLive = TimeSpan.FromMinutes(5);
 
                     // Write the body of the message to the console.

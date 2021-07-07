@@ -88,6 +88,7 @@ namespace Server
                         {
                             try
                             {
+                                // c:\> dir>c:\temp
                                 var tokens = line.Split('>');
                                 foreach (var file in Directory.GetFiles(tokens[1]))
                                 {

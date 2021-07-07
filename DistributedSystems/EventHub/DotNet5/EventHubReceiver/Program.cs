@@ -30,11 +30,12 @@ namespace EventHubReceiver
             {
                 using CancellationTokenSource cancellationSource = new CancellationTokenSource();
 
-                cancellationSource.CancelAfter(TimeSpan.FromSeconds(300));
+                cancellationSource.CancelAfter(TimeSpan.FromSeconds(3000));
 
                 DateTimeOffset oneHourAgo = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromHours(1));
                 EventPosition startingPosition = EventPosition.FromEnqueuedTime(oneHourAgo);
 
+                var res = await consumer.GetPartitionIdsAsync();
                 string firstPartition = (await consumer.GetPartitionIdsAsync(cancellationSource.Token)).First();
 
                 while (true)
