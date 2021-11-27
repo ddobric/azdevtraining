@@ -9,7 +9,7 @@ namespace Daenet.ServiceBus.NetCore
 {
     public class Credentials
     {
-        private static string m_SbConnStr = "Endpoint=sb://aztraining.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=F2PnTnhDBlqyxhXGUETxqhcq12+o2aD6t+HF51cL9WI=";
+        private static string m_SbConnStr = "Endpoint=sb://aztraining.servicebus.windows.net/;SharedAccessKeyName=demo;SharedAccessKey=4+1wNSkzXNbkxgN2T+plmJ8uCuAlAeP6+qm/AjJAa6M=";
 
         static Credentials()
         {
@@ -46,7 +46,6 @@ namespace Daenet.ServiceBus.NetCore
             }
         }
 
-        // public string ConnStr { get  { return "Endpoint=sb://students.servicebus.windows.net/;SharedAccessKeyName=stud-2018;SharedAccessKey=AQiFJiPtD0G/7y8hXStqt8CXZR+M1LSzOfGPiEoL0cc="; } }
         public string ConnStr
         {
             get

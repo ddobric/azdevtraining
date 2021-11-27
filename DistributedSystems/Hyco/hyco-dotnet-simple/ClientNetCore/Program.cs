@@ -13,7 +13,7 @@ namespace Client
             Console.WriteLine("Enter lines of text to send to the server with ENTER");
 
             // Create a new hybrid connection client
-            var client = new HybridConnectionClient("Endpoint=sb://damirtrainingrelay.servicebus.windows.net/;SharedAccessKeyName=hyco;SharedAccessKey=p+hWD3cJBAKBisP9dSoXe7R90KcSst8zpvZQbQS9qH0=;EntityPath=hyco");
+            var client = new HybridConnectionClient("Endpoint=sb://azuretrainingrelay.servicebus.windows.net/;SharedAccessKeyName=pubsub;SharedAccessKey=LKFppG1sXJ1FAzbtEok2Ij4vaoDo5AQ0WYTN2vybU10=;EntityPath=hyco");
 
             // Initiate the connection
             var relayConnection = await client.CreateConnectionAsync();

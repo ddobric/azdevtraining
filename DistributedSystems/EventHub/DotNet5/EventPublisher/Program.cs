@@ -17,7 +17,7 @@ namespace EventPublisher
         {
             Console.WriteLine("Hello EventHub publisher");
 
-            var connectionString = "Endpoint=sb://damirtraining.servicebus.windows.net/;SharedAccessKeyName=send;SharedAccessKey=4XlB1mrqsrz4Ik52oqPeHzXd9ERPYUDwh125unCsI8Y=;EntityPath=myhub";
+            var connectionString = "Endpoint=sb://azuretrainingeventhub.servicebus.windows.net/;SharedAccessKeyName=pubsub;SharedAccessKey=+HD6ooWBSaXO/eGo0N8J5HYcii0OZCBFQ+UywYZdzsk=;EntityPath=myhub";
             var eventHubName = "myhub";
 
             var producer = new EventHubProducerClient(connectionString, eventHubName);
@@ -32,9 +32,10 @@ namespace EventPublisher
                     PartitionKey = "DEVICE"
                 };
 
-                using (var eventBatch = await producer.CreateBatchAsync(batchOptions))
+
+                while (true)
                 {
-                    while (true)
+                    using (var eventBatch = await producer.CreateBatchAsync(batchOptions))
                     {
                         for (var index = 0; index < 500; ++index)
                         {
@@ -63,16 +64,16 @@ namespace EventPublisher
                         }
 
                         await producer.SendAsync(eventBatch);
-                        
-                        await Task.Delay(5000);
+
                     }
+
+                    await Task.Delay(5000);
                 }
             }
             finally
             {
                 await producer.CloseAsync();
             }
-
         }
     }
 }

@@ -17,7 +17,7 @@ namespace EventHubReceiver
         {
             Console.WriteLine("Hello EventHub Receiver!");
 
-            var connectionString = "Endpoint=sb://damirtraining.servicebus.windows.net/;SharedAccessKeyName=read;SharedAccessKey=BJW8jfF9F7J8SZX0nLvOYShnqCTrb8hjnxj6MnWCxco=;EntityPath=myhub";
+            var connectionString = "Endpoint=sb://azuretrainingeventhub.servicebus.windows.net/;SharedAccessKeyName=pubsub;SharedAccessKey=+HD6ooWBSaXO/eGo0N8J5HYcii0OZCBFQ+UywYZdzsk=;EntityPath=myhub";
             var eventHubName = "myhub";
             var consumerGroup = EventHubConsumerClient.DefaultConsumerGroupName;
 
@@ -32,8 +32,8 @@ namespace EventHubReceiver
 
                 cancellationSource.CancelAfter(TimeSpan.FromSeconds(3000));
 
-                DateTimeOffset oneHourAgo = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromHours(1));
-                EventPosition startingPosition = EventPosition.FromEnqueuedTime(oneHourAgo);
+                DateTimeOffset timeBoomark = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromHours(1));
+                EventPosition startingPosition = EventPosition.FromEnqueuedTime(timeBoomark);
 
                 var res = await consumer.GetPartitionIdsAsync();
                 string firstPartition = (await consumer.GetPartitionIdsAsync(cancellationSource.Token)).First();

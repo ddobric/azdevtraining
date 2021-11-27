@@ -12,7 +12,7 @@ namespace Server
         {
             var cts = new CancellationTokenSource();
 
-            var listener = new HybridConnectionListener("Endpoint=sb://damirtrainingrelay.servicebus.windows.net/;SharedAccessKeyName=hyco;SharedAccessKey=p+hWD3cJBAKBisP9dSoXe7R90KcSst8zpvZQbQS9qH0=;EntityPath=hyco");
+            var listener = new HybridConnectionListener("Endpoint=sb://azuretrainingrelay.servicebus.windows.net/;SharedAccessKeyName=pubsub;SharedAccessKey=LKFppG1sXJ1FAzbtEok2Ij4vaoDo5AQ0WYTN2vybU10=;EntityPath=hyco");
 
             // Subscribe to the status events
             listener.Connecting += (o, e) =>
