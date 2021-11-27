@@ -30,6 +30,5 @@ namespace WebJobsSample
                 Console.WriteLine(sr.ReadToEnd());
             }
         }
-
     }
 }
