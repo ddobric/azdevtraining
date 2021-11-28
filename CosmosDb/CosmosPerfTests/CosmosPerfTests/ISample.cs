@@ -16,5 +16,6 @@ namespace CosmosPerfTests
         Task SaveTelemetryData(T[] tasks);
         Task DeleteRecordAsync(T record);
         Task DeleteRecordAsync(T[] telemetryData);
+        Task QueryData();
     }
 }

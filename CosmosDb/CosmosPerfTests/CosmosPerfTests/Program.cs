@@ -11,7 +11,7 @@ namespace CosmosPerfTests
         {
             Console.WriteLine("v1.1");
 
-            if (args != null && args.Length == 1 && args[0].ToLower() == "mongo")
+            if (args != null && args.Length == 1 && args[0].ToLower() == "mongodb")
             {
                 ISample<TelemetryMongo> sampleMongo = new MongoSample();
 
@@ -66,7 +66,7 @@ namespace CosmosPerfTests
 
             for (int i = 0; i < batchSize; i++)
             {
-                var data = getSampleData<T>(i);
+                var data = CreateSampleData<T>(i);
 
                 await sample.SaveTelemetryData(data);
             }
@@ -85,11 +85,7 @@ namespace CosmosPerfTests
 
             var telemetryData = await sample.GetAllTelemetryData();
 
-            if (sample is MongoSample)
-                // Query sample
-                await ((MongoSample)sample).QueryData();
-            else
-                await ((DocumentDb)sample).QueryData3();
+            await sample.QueryData();
 
             watch.Stop();
 
@@ -130,7 +126,7 @@ namespace CosmosPerfTests
 
             for (int i = 0; i < batchSize; i++)
             {
-                telList.Add(getSampleData<T>(i));
+                telList.Add(CreateSampleData<T>(i));
             }
 
             await sample.SaveTelemetryData(telList.ToArray());
@@ -165,7 +161,7 @@ namespace CosmosPerfTests
 
         public static string PartitionKey1 = "DE";
 
-        private static T getSampleData<T>(int i)
+        private static T CreateSampleData<T>(int i)
         {
             if (typeof(T) == typeof(TelemetryMongo))
             {
@@ -184,6 +180,7 @@ namespace CosmosPerfTests
             {
                 return (T)(object)new TelemetryDocDb()
                 {
+                    id = $"ID_{i}",
                     DeviceId = $"DEV_{i}",
                     Region = PartitionKey1,
                     Temperature = m_Random.Next(25, 35) + m_Random.NextDouble(),
