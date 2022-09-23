@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30615.102
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32804.467
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DurableFunctionApp", "DurableFunctionApp\DurableFunctionApp.csproj", "{FAA8BA59-F75C-4772-97AB-2FB6A33191FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DurableFunctionApp.Net31", "DurableFunctionApp\DurableFunctionApp.Net31.csproj", "{FAA8BA59-F75C-4772-97AB-2FB6A33191FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DurableFunctionApp.Net60", "DurableFunctionApp.Net60\DurableFunctionApp.Net60.csproj", "{17B035B5-06B5-435A-863C-0B54AF211002}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{FAA8BA59-F75C-4772-97AB-2FB6A33191FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAA8BA59-F75C-4772-97AB-2FB6A33191FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAA8BA59-F75C-4772-97AB-2FB6A33191FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17B035B5-06B5-435A-863C-0B54AF211002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17B035B5-06B5-435A-863C-0B54AF211002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17B035B5-06B5-435A-863C-0B54AF211002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17B035B5-06B5-435A-863C-0B54AF211002}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
