@@ -17,7 +17,7 @@ namespace EventHubReceiver
         {
             Console.WriteLine("Hello EventHub Receiver!");
 
-            var connectionString = "Endpoint=sb://azuretrainingeventhub.servicebus.windows.net/;SharedAccessKeyName=pubsub;SharedAccessKey=+HD6ooWBSaXO/eGo0N8J5HYcii0OZCBFQ+UywYZdzsk=;EntityPath=myhub";
+            var connectionString = "Endpoint=sb://azuretrainingeventhub.servicebus.windows.net/;SharedAccessKeyName=demo;SharedAccessKey=6zNGkIqk+Yt0EP/Z/56RSY+SJUcGleMP3dG2tXUH+8M=";
             var eventHubName = "myhub";
             var consumerGroup = EventHubConsumerClient.DefaultConsumerGroupName;
 
@@ -36,22 +36,28 @@ namespace EventHubReceiver
                 EventPosition startingPosition = EventPosition.FromEnqueuedTime(timeBoomark);
 
                 var res = await consumer.GetPartitionIdsAsync();
-                string firstPartition = (await consumer.GetPartitionIdsAsync(cancellationSource.Token)).First();
+                
+                var partIds = await consumer.GetPartitionIdsAsync(cancellationSource.Token);
+
+                //string firstPartition = (partIds).First();
 
                 while (true)
                 {
-                    //await foreach (PartitionEvent partitionEvent in consumer.ReadEventsAsync(startReadingAtEarliestEvent: true, cancellationToken: cancellationSource.Token))
-
-                    await foreach (PartitionEvent partitionEvent in consumer.ReadEventsFromPartitionAsync(
-                    firstPartition,
-                    startingPosition,
-                    cancellationSource.Token))
+                    foreach (var partId in partIds)
                     {
-                        string readFromPartition = partitionEvent.Partition.PartitionId;
+                        //await foreach (PartitionEvent partitionEvent in consumer.ReadEventsAsync(startReadingAtEarliestEvent: true, cancellationToken: cancellationSource.Token))
 
-                        byte[] payload = partitionEvent.Data.EventBody.ToArray();
-                        
-                        Console.WriteLine($"Read event of length { payload.Length } from { readFromPartition }. Event: {UTF8Encoding.UTF8.GetString(payload)}");
+                        await foreach (PartitionEvent partitionEvent in consumer.ReadEventsFromPartitionAsync(
+                        partId,
+                        startingPosition,
+                        cancellationSource.Token))
+                        {
+                            string readFromPartition = partitionEvent.Partition.PartitionId;
+
+                            byte[] payload = partitionEvent.Data.EventBody.ToArray();
+
+                            Console.WriteLine($"Read event of length {payload.Length} from {readFromPartition}. Event: {UTF8Encoding.UTF8.GetString(payload)}");
+                        }
                     }
                 }
             }
