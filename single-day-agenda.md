@@ -10,6 +10,15 @@
 
 · Azure Container Registry and Azure Container Instances
 
+## Modern Compute with PaaS and Serverless
+
+· App Service container for APIs, Jobs and more
+
+· Azure Functions
+
+· Azure Durable Entities, Functions and Actor Programming Model
+
+
 ## Distributed Systems
 
 · Messaging with ServiceBus,
@@ -18,13 +27,6 @@
 
 · Edge Computing (IoT & Co.)
 
-## Modern Compute with PaaS and Serverless
-
-· App Service container for APIs, Jobs and more
-
-· Azure Functions
-
-· Azure Durable Entities, Functions and Actor Programming Model
 
 ## Azure Databases overview
 
