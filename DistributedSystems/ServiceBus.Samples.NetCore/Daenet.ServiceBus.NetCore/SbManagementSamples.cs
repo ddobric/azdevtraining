@@ -35,7 +35,7 @@ namespace Daenet.ServiceBus.NetCore
 
                     // The duration of a peek lock; that is, the amount of time that a message is locked from other receivers.
                     LockDuration = TimeSpan.FromSeconds(45),
-                    MaxDeliveryCount = 8,
+                    MaxDeliveryCount = 7,
 
                     // Size of the Queue. For non-partitioned entity, this would be the size of the queue. 
                     // For partitioned entity, this would be the size of each partition.

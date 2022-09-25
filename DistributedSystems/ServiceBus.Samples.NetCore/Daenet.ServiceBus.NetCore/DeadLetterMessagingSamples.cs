@@ -40,16 +40,17 @@ namespace Daenet.ServiceBus.NetCore
            
             m_SbClient = new ServiceBusClient(Credentials.Current.ConnStr, opts);
 
-            Console.WriteLine("Press any key to start receiver...");
-
-            Console.ReadKey();
-
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             if (numberOfMessages > 100)
                 await SendMessageBatchAsync(numberOfMessages, queueName);
             else
                 await SendMessagesAsync(numberOfMessages, queueName);
+
+
+            Console.WriteLine("Press any key to start receiver...");
+
+            Console.ReadKey();
 
             await RunReceiver(queueName, tokenSource.Token);
 
@@ -142,51 +143,6 @@ namespace Daenet.ServiceBus.NetCore
             }
         }
 
-
-        ///// <summary>
-        ///// Register message handlers: Message Receive- and Error-handler.
-        ///// </summary>
-        //static void RegisterOnMessageHandlerAndReceiveMessages()
-        //{
-        //    // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
-        //    var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
-        //    {
-        //        // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
-        //        // Set it according to how many messages the application wants to process in parallel.
-        //        MaxConcurrentCalls = 1,
-
-        //        // Indicates whether the message pump should automatically complete the messages after returning from user callback.
-        //        // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
-        //        AutoComplete = false
-        //    };
-
-        //    // Register the function that processes messages with reliable messaging.
-        //    m_SbClient.RegisterMessageHandler(ProcessMessagesReliableAsync, messageHandlerOptions);
-
-        //}
-
-        ///// <summary>
-        ///// Register message handlers: Message Receive- and Error-handler.
-        ///// </summary>
-        //static void RegisterOnMDLQessageHandlerAndReceiveMessages()
-        //{
-        //    // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
-        //    var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
-        //    {
-        //        // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
-        //        // Set it according to how many messages the application wants to process in parallel.
-        //        MaxConcurrentCalls = 1,
-
-        //        // Indicates whether the message pump should automatically complete the messages after returning from user callback.
-        //        // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
-        //        AutoComplete = false
-        //    };
-
-
-        //    // Register the function that processes messages in dead-letter queue.
-        //    m_DLClient.RegisterMessageHandler(ProcessDLQAsync, messageHandlerOptions);
-        //}
-
         /// <summary>
         /// Demonstrates how to process message in a reliable way. If the complete is not called,
         /// message remains in a queue for LockTime duration.
@@ -196,11 +152,13 @@ namespace Daenet.ServiceBus.NetCore
         /// <returns></returns>
         static async Task RunReceiver(string queueName, CancellationToken token)
         {
-            ServiceBusReceiver receiver = m_SbClient.CreateReceiver($"{queueName}/$DeadLetterQueue", new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
+            ServiceBusReceiver receiver = m_SbClient.CreateReceiver(queueName, new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
 
             while (token.IsCancellationRequested == false)
             {
-                var msg = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30));
+                var msg = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(10));
+                if (msg == null)
+                    break;
 
                 Console.WriteLine($"Received message: SequenceNumber:{msg.SequenceNumber} Body:{Encoding.UTF8.GetString(msg.Body)}");
 

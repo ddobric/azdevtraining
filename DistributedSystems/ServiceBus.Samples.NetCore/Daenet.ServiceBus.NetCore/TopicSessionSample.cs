@@ -79,41 +79,45 @@ namespace Daenet.ServiceBus.NetCore
 
 
 
-        static async Task RunSubscriptionSessionReceivers(string topicName, string subscriptionName, CancellationToken token)
+        static Task RunSubscriptionSessionReceivers(string topicName, string subscriptionName, CancellationToken token)
         {
-            List<Task> tasks = new List<Task>();
-
-            List<string> sessions = new List<string>();
-            sessions.Add("S1");
-            sessions.Add("S2");
-            sessions.Add("S3");
-
-            foreach (var sess in sessions)
+            return Task.Run(() =>
             {
-                tasks.Add(Task.Run(async () =>
+                List<Task> tasks = new List<Task>();
+
+                List<string> sessions = new List<string>();
+                sessions.Add("S1");
+                sessions.Add("S2");
+                sessions.Add("S3");
+
+                foreach (var sess in sessions)
                 {
-                    // create a session receiver that we can use to receive the message. Since we don't specify a
-                    // particular session, we will get the next available session from the service.
-                    ServiceBusSessionReceiver sessReceiver = await m_SbClient.AcceptSessionAsync(topicName, subscriptionName, sess);
-
-                    while (!token.IsCancellationRequested)
+                    tasks.Add(Task.Run(async () =>
                     {
-                        var message = await sessReceiver.ReceiveMessageAsync();
+                        // create a session receiver that we can use to receive the message. Since we don't specify a
+                        // particular session, we will get the next available session from the service.
+                        ServiceBusSessionReceiver sessReceiver = await m_SbClient.AcceptSessionAsync(topicName, subscriptionName, sess);
 
-                        if (message != null)
+                        while (!token.IsCancellationRequested)
                         {
-                            Console.WriteLine($"Received message: SessionId:{message.SessionId}, SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
-                            await sessReceiver.CompleteMessageAsync(message);
-                        }
-                        else
-                        {
-                            Console.WriteLine("no messages..");
-                        }
-                    }
-                }));
-            }
+                            var message = await sessReceiver.ReceiveMessageAsync();
 
-            Task.WaitAll(tasks.ToArray());
+                            if (message != null)
+                            {
+                                Console.WriteLine($"Received message {subscriptionName}: SessionId:{message.SessionId}, SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+                                await sessReceiver.CompleteMessageAsync(message);
+                            }
+                            else
+                            {
+                                Console.WriteLine("no messages..");
+                            }
+                        }
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+
+            });
         }
     }
 }

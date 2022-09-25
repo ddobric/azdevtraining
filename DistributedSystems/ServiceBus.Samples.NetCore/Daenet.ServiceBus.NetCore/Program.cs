@@ -23,18 +23,20 @@ namespace Daenet.ServiceBus.NetCore
             const string topicName = "topicsamples/sendreceive";
             const string topicNameSession = "topicsamples/sendreceive-session";
 
-            await SbManagementSamples.EnsureQueueExists(queueName, false);
-            await QueueSamples.RunAsync(10, queueName);
+            //await SbManagementSamples.EnsureQueueExists(queueName, false);
+            //await QueueSamples.RunAsync(500, queueName);
 
-            await SbManagementSamples.EnsureQueueExists(queueNameSession, true);
-            await QueueSessionSamples.RunAsync(10, queueNameSession);
+            //await SbManagementSamples.EnsureQueueExists(queueNameSession, true);
+            //await QueueSessionSamples.RunAsync(10, queueNameSession);
 
-            await DeadLetterMessagingSamples.RunAsync(10, queueName);
+            //await SbManagementSamples.EnsureQueueExists(queueName, false);
+            //await DeadLetterMessagingSamples.RunAsync(10, queueName);
 
-            await QueueReliableMessagingSamples.RunAsync(10, queueName);
+            //await SbManagementSamples.EnsureQueueExists(queueName, false);
+            //await QueueReliableMessagingSamples.RunAsync(10, queueName);
 
-            await SbManagementSamples.EnsureTopicExists(topicName, "subscription1", "subscription2", false);
-            await TopicSample.RunAsync(100, topicName, "subscription1", "subscription2");
+            //await SbManagementSamples.EnsureTopicExists(topicName, "subscription1", "subscription2", false);
+            //await TopicSample.RunAsync(100, topicName, "subscription1", "subscription2");
 
             await SbManagementSamples.EnsureTopicExists(topicNameSession, "session-subscription1", "session-subscription2", true);
             await TopicSessionSample.RunAsync(10, topicNameSession, "session-subscription1", "session-subscription2");

@@ -137,6 +137,8 @@ namespace Daenet.ServiceBus.NetCore
             while (!token.IsCancellationRequested)
             { 
                 var message = await receiver.ReceiveMessageAsync(cancellationToken:token);
+                if (message == null)
+                    break;
 
                 // Process the message.
                 Console.WriteLine($"Received message: SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");

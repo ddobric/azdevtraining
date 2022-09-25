@@ -98,8 +98,7 @@ namespace Daenet.ServiceBus.NetCore
                     for (var i = 0; i < numberOfMessagesToSend; i++)
                     {
                         // Create a new message to send to the queue.
-                        string messageBody = $"Message {i}";
-                        var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageBody));
+                        var message = new ServiceBusMessage(createMessage());
                         message.ApplicationProperties.Add("USECASE", "QueueSamples");
                         message.TimeToLive = TimeSpan.FromMinutes(10);
 
@@ -110,7 +109,7 @@ namespace Daenet.ServiceBus.NetCore
                             break;
                         }
                         else
-                            Console.WriteLine($"Adding message to batch: {messageBody}");
+                            Console.WriteLine($"Adding message to batch: {i}");
                     }
 
                     // Send batch of messages to the queue.

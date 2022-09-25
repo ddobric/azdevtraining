@@ -99,9 +99,9 @@ namespace Daenet.ServiceBus.NetCore
                         }
                     }));
                 }
-            }
 
-            Task.WaitAll(tasks.ToArray());
+                Task.WaitAll(tasks.ToArray());
+            }
         }
     }
 }

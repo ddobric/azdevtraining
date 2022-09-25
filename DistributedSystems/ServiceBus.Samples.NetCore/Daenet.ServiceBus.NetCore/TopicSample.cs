@@ -36,8 +36,8 @@ namespace Daenet.ServiceBus.NetCore
 
             List<Task> tasks = new List<Task>();
 
-            tasks.Add(RunSubscriptionReceiver(topicName, sub1, tokenSource.Token));
-            tasks.Add(RunSubscriptionReceiver(topicName, sub2, tokenSource.Token));
+            tasks.Add(RunSubscriptionReceiver(topicName, sub1, tokenSource.Token, ConsoleColor.Yellow));
+            tasks.Add(RunSubscriptionReceiver(topicName, sub2, tokenSource.Token, ConsoleColor.Cyan));
 
             Task.WaitAll(tasks.ToArray());
 
@@ -83,11 +83,9 @@ namespace Daenet.ServiceBus.NetCore
         }
 
 
-        static async Task RunSubscriptionReceiver(string topicName, string subscriptionName, CancellationToken token)
+        static async Task RunSubscriptionReceiver(string topicName, string subscriptionName, CancellationToken token, ConsoleColor color)
         {
             var receiver = m_SbClient.CreateReceiver(topicName, subscriptionName, new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
 
             while (token.IsCancellationRequested == false)
             {
@@ -96,7 +94,8 @@ namespace Daenet.ServiceBus.NetCore
 
                 foreach (var message in msgs)
                 {
-                    Console.WriteLine($"Received message: SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+                    Console.ForegroundColor = color;
+                    Console.WriteLine($"Received message: {subscriptionName}, SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
 
                     await receiver.CompleteMessageAsync(message);
                 }
