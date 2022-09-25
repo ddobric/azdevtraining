@@ -24,7 +24,7 @@ namespace Daenet.ServiceBus.NetCore
             // SbManagementSamples.PrepareTopic("topicsamples/sendreceive", false).Wait();
             //TopicSample.RunAsync(100).Wait();
 
-            SbManagementSamples.PrepareTopic("topicsamples/sendreceive", true).Wait();
+            SbManagementSamples.CreateTopic("topicsamples/sendreceive", true).Wait();
             TopicSessionSample.RunAsync(10).Wait();
         }
     }

@@ -1,4 +1,6 @@
-﻿using Microsoft.Azure.ServiceBus;
+﻿
+using Azure.Messaging.ServiceBus.Administration;
+using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
@@ -14,99 +16,58 @@ namespace Daenet.ServiceBus.NetCore
         /// Demonstrates how to create a new queue or to return existing one.
         /// </summary>
         /// <param name="qName">The name/path pf the queue.</param>
-        public static async Task<QueueDescription> PrepareQueue(string qName, bool requireSession = false)
+        public static async Task<QueueProperties> CreateQueue(string queueName, bool requireSession = false)
         {
-            ManagementClient mgmClient = new ManagementClient(Credentials.Current.ConnStr);
+            ServiceBusAdministrationClient mgmClient = new ServiceBusAdministrationClient(Credentials.Current.ConnStr);
+
+            QueueProperties qProps;
 
             try
             {
-                QueueDescription queueDescription;
-
-                if (mgmClient.QueueExistsAsync(qName).Result == false)
+                var options = new CreateQueueOptions(queueName)
                 {
-                    queueDescription = await createQueue(qName, requireSession, mgmClient);
+                    // Duration of idle interval after which the queue is automatically deleted. 
+                    AutoDeleteOnIdle = TimeSpan.FromDays(7),
+
+                    DefaultMessageTimeToLive = TimeSpan.FromDays(2),
+                    DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1),
+                    EnableBatchedOperations = true,
+                    DeadLetteringOnMessageExpiration = true,
+                    EnablePartitioning = false,
+                    ForwardDeadLetteredMessagesTo = null,
+                    ForwardTo = null,
+
+                    // The duration of a peek lock; that is, the amount of time that a message is locked from other receivers.
+                    LockDuration = TimeSpan.FromSeconds(45),
+                    MaxDeliveryCount = 8,
+
+                    // Size of the Queue. For non-partitioned entity, this would be the size of the queue. 
+                    // For partitioned entity, this would be the size of each partition.
+                    MaxSizeInMegabytes = 2048,
+
+                    RequiresDuplicateDetection = true,
+                    RequiresSession = requireSession,
+                    UserMetadata = "some metadata"
+                };
+
+                if (mgmClient.QueueExistsAsync(queueName).Result == false)
+                {
+                    qProps = await mgmClient.CreateQueueAsync(options);
                 }
                 else
                 {
                     //queueDescription = await mgmClient.GetQueueAsync(qName);
-                    await mgmClient.DeleteQueueAsync(qName);
-                    queueDescription = await createQueue(qName, requireSession, mgmClient);
+                    await mgmClient.DeleteQueueAsync(queueName);
+                    qProps = await mgmClient.CreateQueueAsync(options);
                 }
 
-                return queueDescription;
-
+                return qProps;
             }
             catch (AggregateException ex)
             {
-                switch (ex.InnerException)
-                {
-                    case MessagingEntityNotFoundException notFoundEx:
-
-                        Console.WriteLine($"Queue does not exist: {qName}");
-                        throw;
-
-                    case MessagingEntityAlreadyExistsException alreadyExistEx:
-                        Console.WriteLine($"{ex}");
-                        throw;
-
-                    case MessagingEntityDisabledException disabledEx:
-                        Console.WriteLine($"{ex}");
-                        throw;
-                    case ServiceBusException sbEx:
-                        Console.WriteLine($"{ex}");
-                        throw;
-
-                    default:
-                        throw;
-                }
+                Console.WriteLine($"{ex}");
+                throw;
             }
-        }
-
-        private static async Task<QueueDescription> createQueue(string qName, bool requireSession, ManagementClient mgmClient)
-        {
-            QueueDescription queueDescription;
-            queueDescription = new QueueDescription(qName)
-            {
-                // The duration of a peek lock; that is, the amount of time that a message is locked from other receivers.
-                LockDuration = TimeSpan.FromSeconds(45),
-
-                // Size of the Queue. For non-partitioned entity, this would be the size of the queue. 
-                // For partitioned entity, this would be the size of each partition.
-                MaxSizeInMB = 2048,
-
-                // This value indicates if the queue requires guard against duplicate messages. 
-                // Find out more in DuplicateDetection sample
-                RequiresDuplicateDetection = false,
-
-                //Since RequiresDuplicateDetection is false, the following need not be specified and will be ignored.
-                //DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(2),
-
-                // This indicates whether the queue supports the concept of session.
-                // Find out more in "Session and Workflow Management Features" sample
-                RequiresSession = requireSession,
-
-                // The default time to live value for the messages
-                // Find out more in "TimeToLive" sample.
-                DefaultMessageTimeToLive = TimeSpan.FromMinutes(5),
-
-                // Duration of idle interval after which the queue is automatically deleted. 
-                AutoDeleteOnIdle = TimeSpan.MaxValue,
-
-                // Decides whether an expired message due to TTL should be dead-letterd
-                // Find out more in "TimeToLive" sample.
-                EnableDeadLetteringOnMessageExpiration = false,
-
-                // The maximum delivery count of a message before it is dead-lettered
-                // Find out more in "DeadletterQueue" sample
-                MaxDeliveryCount = 8,
-
-                // Creating only one partition. 
-                // Find out more in PartitionedQueues sample.
-                EnablePartitioning = false
-            };
-
-            queueDescription = await mgmClient.CreateQueueAsync(queueDescription);
-            return queueDescription;
         }
 
 
@@ -114,131 +75,80 @@ namespace Daenet.ServiceBus.NetCore
         /// Demonstrates how to create a new queue or to return existing one.
         /// </summary>
         /// <param name="qName">The name/path pf the queue.</param>
-        public static async Task<TopicDescription> PrepareTopic(string qName, bool requireSession = false)
+        public static async Task<TopicProperties> CreateTopic(string queueName, bool requireSession = false)
         {
-            ManagementClient mgmClient = new ManagementClient(Credentials.Current.ConnStr);
+            ServiceBusAdministrationClient mgmClient = new ServiceBusAdministrationClient(Credentials.Current.ConnStr);
+            TopicProperties tProps;
 
-            try
+            var options = new CreateTopicOptions(queueName)
             {
-                TopicDescription topicDescription;
+                // Duration of idle interval after which the queue is automatically deleted. 
+                AutoDeleteOnIdle = TimeSpan.FromDays(7),
 
-                if (mgmClient.TopicExistsAsync(qName).Result == false)
-                {
-                    topicDescription = await createTopic(qName, requireSession, mgmClient);
-                }
-                else
-                {
-                    //queueDescription = await mgmClient.GetQueueAsync(qName);
-                    await mgmClient.DeleteTopicAsync(qName);
-                    topicDescription = await createTopic(qName, requireSession, mgmClient);
-                }
-
-                return topicDescription;
-
-            }
-            catch (AggregateException ex)
-            {
-                switch (ex.InnerException)
-                {
-                    case MessagingEntityNotFoundException notFoundEx:
-
-                        Console.WriteLine($"Queue does not exist: {qName}");
-                        throw;
-
-                    case MessagingEntityAlreadyExistsException alreadyExistEx:
-                        Console.WriteLine($"{ex}");
-                        throw;
-
-                    case MessagingEntityDisabledException disabledEx:
-                        Console.WriteLine($"{ex}");
-                        throw;
-                    case ServiceBusException sbEx:
-                        Console.WriteLine($"{ex}");
-                        throw;
-
-                    default:
-                        throw;
-                }
-            }
-        }
-
-
-        private static async Task<TopicDescription> createTopic(string qName, bool requireSession, ManagementClient mgmClient)
-        {
-            TopicDescription topicDescription;
-            topicDescription = new TopicDescription(qName)
-            {
+                DefaultMessageTimeToLive = TimeSpan.FromDays(2),
+                DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1),
+                EnableBatchedOperations = true,
+                EnablePartitioning = false,
 
                 // Size of the Queue. For non-partitioned entity, this would be the size of the queue. 
                 // For partitioned entity, this would be the size of each partition.
-                MaxSizeInMB = 2048,
+                MaxSizeInMegabytes = 2048,
 
-                // This value indicates if the queue requires guard against duplicate messages. 
-                // Find out more in DuplicateDetection sample
-                RequiresDuplicateDetection = false,
-
-                //Since RequiresDuplicateDetection is false, the following need not be specified and will be ignored.
-                //DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(2),
-
-
-                // The default time to live value for the messages
-                // Find out more in "TimeToLive" sample.
-                DefaultMessageTimeToLive = TimeSpan.FromMinutes(5),
-
-                // Duration of idle interval after which the queue is automatically deleted. 
-                AutoDeleteOnIdle = TimeSpan.MaxValue,
-
-                // Creating only one partition. 
-                // Find out more in PartitionedQueues sample.
-                EnablePartitioning = false
+                RequiresDuplicateDetection = true,
+                UserMetadata = "some metadata"
             };
 
-            topicDescription = await mgmClient.CreateTopicAsync(topicDescription);
+            if (mgmClient.TopicExistsAsync(queueName).Result)
+            {
+                await mgmClient.DeleteTopicAsync(queueName);
+            }
 
-            await createSubscription(mgmClient, topicDescription.Path, TopicSample.cSubscriptionName1, requireSession);
+            tProps = await mgmClient.CreateTopicAsync(options);
 
-            await createSubscription(mgmClient, topicDescription.Path, TopicSample.cSubscriptionName2, requireSession);
+            return tProps;
 
-            return topicDescription;
         }
 
-        private static async Task<SubscriptionDescription> createSubscription(ManagementClient mgmClient,
-            string path,
-          string name,
-          bool requireSession,
-          Filter filter = null)
+
+
+        private static async Task<SubscriptionProperties> CreateSubscription(string topicName, string path, string sName, bool requireSession, bool createRules = false)
         {
+            ServiceBusAdministrationClient mgmClient = new ServiceBusAdministrationClient(Credentials.Current.ConnStr);
           
-            SubscriptionDescription description = new SubscriptionDescription(path, name)
+            var options = new CreateSubscriptionOptions(topicName, sName)
             {
+                AutoDeleteOnIdle = TimeSpan.FromDays(7),
+                DefaultMessageTimeToLive = TimeSpan.FromDays(2),
+                EnableBatchedOperations = true,
+                UserMetadata = "some metadata",
                 RequiresSession = requireSession
             };
-           
-            if (await mgmClient.SubscriptionExistsAsync(path, name))
+
+
+            if (await mgmClient.SubscriptionExistsAsync(topicName, sName))
             {
-                await mgmClient.DeleteSubscriptionAsync(path, name);
+                await mgmClient.DeleteSubscriptionAsync(topicName, sName);
             }
 
-            //sDesc.LockDuration = TimeSpan.FromDays(2);
-            return await mgmClient.CreateSubscriptionAsync(description);
-        }
-
-        private static async Task<RuleDescription> createRule(ManagementClient mgmClient,
-          string topicPath,
-        string subscriptionName,       
-        Filter filter)
-        {
-            if (await mgmClient.SubscriptionExistsAsync(topicPath, subscriptionName))
+            SubscriptionProperties subProps = await mgmClient.CreateSubscriptionAsync(options);
+            if (createRules)
             {
-                await mgmClient.DeleteSubscriptionAsync(topicPath, subscriptionName);
+                CreateRuleOptions ruleOpts1 = new CreateRuleOptions
+                {
+                    Name = "LessThan",
+                    Filter = new SqlRuleFilter($"Num<{int.MaxValue / 2}"),
+                };
+
+                await mgmClient.CreateRuleAsync(topicName, sName, ruleOpts1);
+
+                CreateRuleOptions ruleOpts2 = new CreateRuleOptions
+                {
+                    Name = "GreaterThan",
+                    Filter = new SqlRuleFilter($"Num>={int.MaxValue / 2}"),
+                };
             }
 
-            RuleDescription rule = new RuleDescription()
-            {
-                 Filter = filter,
-            };
-
-            return await mgmClient.CreateRuleAsync(topicPath, subscriptionName, rule);
+            return subProps;
         }
     }
 }

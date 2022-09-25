@@ -1,4 +1,6 @@
-﻿using Microsoft.Azure.ServiceBus;
+﻿
+using Azure.Messaging.ServiceBus;
+using Microsoft.Azure.Amqp.Framing;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -14,14 +16,16 @@ namespace Daenet.ServiceBus.NetCore
     /// </summary>
     internal class DeadLetterMessagingSamples
     {
+        private static CancellationTokenSource tokenSource;
+        
         const string m_QueueName = "queuesamples/sendreceive";
 
         /// <summary>
         /// Client for sending and receiving queue messages.
         /// </summary>
-        static IQueueClient m_QueueClient;
+        static ServiceBusClient m_SbClient;
 
-        static IQueueClient m_DLClient;
+        //static IQueueClient m_DLClient;
 
         /// <summary>
         /// Start sending of messages.
@@ -31,24 +35,26 @@ namespace Daenet.ServiceBus.NetCore
         /// <returns></returns>
         public static async Task RunAsync(int numberOfMessages)
         {
+            tokenSource = new CancellationTokenSource();
 
-            m_QueueClient = new QueueClient(Credentials.Current.ConnStr,
-                m_QueueName, receiveMode: ReceiveMode.PeekLock);
-
-            m_DLClient = new QueueClient(Credentials.Current.ConnStr,
-              $"{m_QueueName}/$DeadLetterQueue", receiveMode: ReceiveMode.PeekLock);
-
-            //if (numberOfMessages <= 100)
-            //    await SendMessagesAsync(numberOfMessages);
-            //else
-            //    await SendMessageBatchAsync(numberOfMessages);
+            ServiceBusClientOptions opts = new ServiceBusClientOptions
+            {
+             RetryOptions = new ServiceBusRetryOptions {  MaxRetries = 3, MaxDelay = TimeSpan.FromMinutes(3), Delay = TimeSpan.FromMinutes(1)}
+            };
+           
+            m_SbClient = new ServiceBusClient(Credentials.Current.ConnStr, opts);
 
             Console.WriteLine("Press any key to start receiver...");
             Console.ReadKey();
 
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            RegisterOnMessageHandlerAndReceiveMessages();
+            if (numberOfMessages > 100)
+                await SendMessageBatchAsync(numberOfMessages);
+            else
+                await SendMessagesAsync(numberOfMessages);
+
+            await RunReceiver(tokenSource.Token);
 
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("Press any key to start receiver...");
@@ -57,8 +63,6 @@ namespace Daenet.ServiceBus.NetCore
             RegisterOnMDLQessageHandlerAndReceiveMessages();
 
             Console.ReadKey();
-
-            await m_QueueClient.CloseAsync();
         }
 
         /// <summary>
@@ -75,14 +79,16 @@ namespace Daenet.ServiceBus.NetCore
                     // Create a new message to send to the queue.
                     string messageBody = $"Message {i}";
                     //var message = new Message(Encoding.UTF8.GetBytes(messageBody));
-                    var message = new Message(createMessage());
-                    message.UserProperties.Add("USECASE", "UC-2.1-REQ");
+                    var message = new ServiceBusMessage(createMessage());
+                    message.ApplicationProperties.Add("USECASE", "UC-2.1-REQ");
                     message.TimeToLive = TimeSpan.FromMinutes(10);
 
                     Console.WriteLine($"Sending message: {messageBody}");
 
+                    var sender = m_SbClient.CreateSender(m_QueueName);
+
                     // Send the message to the queue.
-                    await m_QueueClient.SendAsync(message);
+                    await sender.SendMessageAsync(message);
                 }
             }
             catch (Exception exception)
@@ -100,21 +106,23 @@ namespace Daenet.ServiceBus.NetCore
         {
             try
             {
-                List<Message> messages = new List<Message>();
+                List<ServiceBusMessage> messages = new List<ServiceBusMessage>();
 
                 for (var i = 0; i < numberOfMessagesToSend; i++)
                 {
                     // Create a new message to send to the queue.
                     string messageBody = $"Message {i}";
-                    var message = new Message(Encoding.UTF8.GetBytes(messageBody));
-                    message.UserProperties.Add("USECASE", "UC-2.1-REQ");
+                    var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageBody));
+                    message.ApplicationProperties.Add("USECASE", "UC-2.1-REQ");
                     message.TimeToLive = TimeSpan.FromMinutes(10);
                     Console.WriteLine($"Adding message to batch: {messageBody}");
                     messages.Add(message);
                 }
 
-                // Send batch of messages to the queue.
-                await m_QueueClient.SendAsync(messages);
+                var sender = m_SbClient.CreateSender(m_QueueName);
+
+                // Send the message to the queue.
+                await sender.SendMessageAsync(message);
             }
             catch (Exception exception)
             {
@@ -123,48 +131,99 @@ namespace Daenet.ServiceBus.NetCore
         }
 
 
+        ///// <summary>
+        ///// Register message handlers: Message Receive- and Error-handler.
+        ///// </summary>
+        //static void RegisterOnMessageHandlerAndReceiveMessages()
+        //{
+        //    // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
+        //    var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
+        //    {
+        //        // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
+        //        // Set it according to how many messages the application wants to process in parallel.
+        //        MaxConcurrentCalls = 1,
+
+        //        // Indicates whether the message pump should automatically complete the messages after returning from user callback.
+        //        // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
+        //        AutoComplete = false
+        //    };
+
+        //    // Register the function that processes messages with reliable messaging.
+        //    m_SbClient.RegisterMessageHandler(ProcessMessagesReliableAsync, messageHandlerOptions);
+
+        //}
+
+        ///// <summary>
+        ///// Register message handlers: Message Receive- and Error-handler.
+        ///// </summary>
+        //static void RegisterOnMDLQessageHandlerAndReceiveMessages()
+        //{
+        //    // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
+        //    var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
+        //    {
+        //        // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
+        //        // Set it according to how many messages the application wants to process in parallel.
+        //        MaxConcurrentCalls = 1,
+
+        //        // Indicates whether the message pump should automatically complete the messages after returning from user callback.
+        //        // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
+        //        AutoComplete = false
+        //    };
+
+
+        //    // Register the function that processes messages in dead-letter queue.
+        //    m_DLClient.RegisterMessageHandler(ProcessDLQAsync, messageHandlerOptions);
+        //}
+
         /// <summary>
-        /// Register message handlers: Message Receive- and Error-handler.
+        /// Demonstrates how to process message in a reliable way. If the complete is not called,
+        /// message remains in a queue for LockTime duration.
         /// </summary>
-        static void RegisterOnMessageHandlerAndReceiveMessages()
+        /// <param name="message"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        static async Task RunReceiver(CancellationToken token)
         {
-            // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
-            var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
+            ServiceBusReceiver receiver = m_SbClient.CreateReceiver($"{m_QueueName}/$DeadLetterQueue",
+            new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
+
+            while (token.IsCancellationRequested == false)
             {
-                // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
-                // Set it according to how many messages the application wants to process in parallel.
-                MaxConcurrentCalls = 1,
+                var msg = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30));
 
-                // Indicates whether the message pump should automatically complete the messages after returning from user callback.
-                // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
-                AutoComplete = false
-            };
+                Console.WriteLine($"Received message: SequenceNumber:{msg.SequenceNumber} Body:{Encoding.UTF8.GetString(msg.Body)}");
 
-            // Register the function that processes messages with reliable messaging.
-            m_QueueClient.RegisterMessageHandler(ProcessMessagesReliableAsync, messageHandlerOptions);
+                var json = Encoding.UTF8.GetString(msg.Body);
 
-        }
+                Transfer transferObj = JsonConvert.DeserializeObject<Transfer>(json);
 
-        /// <summary>
-        /// Register message handlers: Message Receive- and Error-handler.
-        /// </summary>
-        static void RegisterOnMDLQessageHandlerAndReceiveMessages()
-        {
-            // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
-            var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
-            {
-                // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
-                // Set it according to how many messages the application wants to process in parallel.
-                MaxConcurrentCalls = 1,
+                if (transferObj.amount > 15000)
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"Ammount: {transferObj.amount}, From:{transferObj.fromAccount}, To: {transferObj.toAccount}.");
 
-                // Indicates whether the message pump should automatically complete the messages after returning from user callback.
-                // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
-                AutoComplete = false
-            };
+                    // Complete the message is not required.
+                    await receiver.DeadLetterMessageAsync(msg, "Amount too large");
 
+                }
+                else if (transferObj.amount < 10000)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"Ammount: {transferObj.amount}, From:{transferObj.fromAccount}, To: {transferObj.toAccount}.");
 
-            // Register the function that processes messages in dead-letter queue.
-            m_DLClient.RegisterMessageHandler(ProcessDLQAsync, messageHandlerOptions);
+                    // Complete the message so that it is not received again.
+                    // This can be done only if the subscriptionClient is created in ReceiveMode.PeekLock mode (which is the default).
+                    await receiver.CompleteMessageAsync(msg);
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine($"Ammount: {transferObj.amount}, From:{transferObj.fromAccount}, To: {transferObj.toAccount}.");
+                    await receiver.AbandonMessageAsync(msg);
+
+                    Console.ResetColor();
+                }
+            }
         }
 
         /// <summary>
@@ -174,78 +233,45 @@ namespace Daenet.ServiceBus.NetCore
         /// <param name="message"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        static async Task ProcessMessagesReliableAsync(Message message, CancellationToken token)
+        static async Task ProcessDLQAsync(CancellationToken token)
         {
-            // Process the message.
-            Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+            ServiceBusReceiver receiver = m_SbClient.CreateReceiver($"{m_QueueName}/$DeadLetterQueue",
+              new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
 
-            var json = Encoding.UTF8.GetString(message.Body);
 
-            Transfer transferObj = JsonConvert.DeserializeObject<Transfer>(json);
-
-            if (transferObj.amount > 15000)
+            while (token.IsCancellationRequested == false)
             {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"Ammount: {transferObj.amount}, From:{ transferObj.fromAccount}, To: {transferObj.toAccount}.");
+                var msg = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30));
 
-                // Complete the message is not required.
-                await m_QueueClient.DeadLetterAsync(message.SystemProperties.LockToken, "Amount too large");
 
-            }
-            else if (transferObj.amount < 10000)
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Ammount: {transferObj.amount}, From:{ transferObj.fromAccount}, To: {transferObj.toAccount}.");
+                // Process the message.
+                Console.WriteLine($"Received message: SequenceNumber:{msg.SequenceNumber} Body:{Encoding.UTF8.GetString(msg.Body)}");
 
-                // Complete the message so that it is not received again.
-                // This can be done only if the subscriptionClient is created in ReceiveMode.PeekLock mode (which is the default).
-                await m_QueueClient.CompleteAsync(message.SystemProperties.LockToken);
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine($"Ammount: {transferObj.amount}, From:{ transferObj.fromAccount}, To: {transferObj.toAccount}.");
-                await m_QueueClient.AbandonAsync(message.SystemProperties.LockToken);
-                Console.ResetColor();
+                var json = Encoding.UTF8.GetString(msg.Body);
+
+                Transfer transferObj = JsonConvert.DeserializeObject<Transfer>(json);
+
+                Console.WriteLine($"Ammount: {transferObj.amount}, From:{transferObj.fromAccount}, To: {transferObj.toAccount}.");
+
+                await receiver.CompleteMessageAsync(msg);
             }
         }
 
-        /// <summary>
-        /// Demonstrates how to process message in a reliable way. If the complete is not called,
-        /// message remains in a queue for LockTime duration.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        static async Task ProcessDLQAsync(Message message, CancellationToken token)
-        {
-            // Process the message.
-            Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
-
-            var json = Encoding.UTF8.GetString(message.Body);
-
-            Transfer transferObj = JsonConvert.DeserializeObject<Transfer>(json);
-
-            Console.WriteLine($"Ammount: {transferObj.amount}, From:{ transferObj.fromAccount}, To: {transferObj.toAccount}.");
-
-            await m_QueueClient.CompleteAsync(message.SystemProperties.LockToken);
-        }
-
-        /// <summary>
-        /// Invoked in a case of an error.
-        /// </summary>
-        /// <param name="exceptionReceivedEventArgs"></param>
-        /// <returns></returns>
-        static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
-        {
-            Console.WriteLine($"Message handler encountered an exception {exceptionReceivedEventArgs.Exception}.");
-            var context = exceptionReceivedEventArgs.ExceptionReceivedContext;
-            Console.WriteLine("Exception context for troubleshooting:");
-            Console.WriteLine($"- Endpoint: {context.Endpoint}");
-            Console.WriteLine($"- Entity Path: {context.EntityPath}");
-            Console.WriteLine($"- Executing Action: {context.Action}");
-            return Task.CompletedTask;
-        }
+        ///// <summary>
+        ///// Invoked in a case of an error.
+        ///// </summary>
+        ///// <param name="exceptionReceivedEventArgs"></param>
+        ///// <returns></returns>
+        //static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
+        //{
+        //    Console.WriteLine($"Message handler encountered an exception {exceptionReceivedEventArgs.Exception}.");
+        //    var context = exceptionReceivedEventArgs.ExceptionReceivedContext;
+        //    Console.WriteLine("Exception context for troubleshooting:");
+        //    Console.WriteLine($"- Endpoint: {context.Endpoint}");
+        //    Console.WriteLine($"- Entity Path: {context.EntityPath}");
+        //    Console.WriteLine($"- Executing Action: {context.Action}");
+        //    return Task.CompletedTask;
+        //}
 
         private static Random m_Rnd = new Random();
 
