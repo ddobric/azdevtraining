@@ -59,8 +59,8 @@ namespace Daenet.ServiceBus.NetCore
         public string ClientSecret { get; set; }
         public string SubscriptionId { get; set; }
         public string DataCenterLocation { get; set; }
-        public SkuName ServiceBusSkuName { get; set; }
-        public SkuTier? ServiceBusSkuTier { get; set; }
+        //public SkuName ServiceBusSkuName { get; set; }
+        //public SkuTier? ServiceBusSkuTier { get; set; }
     }
 
 }

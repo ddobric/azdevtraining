@@ -1,4 +1,4 @@
-﻿using Microsoft.Azure.ServiceBus;
+﻿using Azure.Messaging.ServiceBus;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,43 +10,46 @@ namespace Daenet.ServiceBus.NetCore
     internal class TopicSample
     {
 
-        const string cTopicName = "topicsamples/sendreceive";
+        private static CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-        public const string cSubscriptionName1 = "Subscription1";
-        public const string cSubscriptionName2 = "Subscription2";
+        /// <summary>
+        /// Client for sending and receiving queue messages.
+        /// </summary>
+        static ServiceBusClient m_SbClient;
 
-        static ITopicClient topicClient;
-
-        static ISubscriptionClient subscriptionClient1;
-
-        static ISubscriptionClient subscriptionClient2;
-
-
-        public static async Task RunAsync(int numberOfMessages)
+        public static async Task RunAsync(int numberOfMessages, string topicName, string sub1, string sub2)
         {
-            topicClient = new TopicClient(Credentials.Current.ConnStr, cTopicName);
+            ServiceBusClientOptions opts = new ServiceBusClientOptions
+            {
+                RetryOptions = new ServiceBusRetryOptions { MaxRetries = 3, MaxDelay = TimeSpan.FromMinutes(3), Delay = TimeSpan.FromMinutes(1) }
+            };
 
-            subscriptionClient1 = new SubscriptionClient(Credentials.Current.ConnStr, cTopicName, cSubscriptionName1, receiveMode: ReceiveMode.PeekLock);
+            m_SbClient = new ServiceBusClient(Credentials.Current.ConnStr, opts);
 
-            subscriptionClient2 = new SubscriptionClient(Credentials.Current.ConnStr, cTopicName, cSubscriptionName2, receiveMode: ReceiveMode.PeekLock);
-
-            await SendMessagesAsync(numberOfMessages);
+            await SendMessagesAsync(numberOfMessages, topicName);
 
             Console.WriteLine("Press any key to start receiver...");
+
             Console.ReadKey();
+
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            RegisterMessageHandlerAndReceiveMessages();
+            List<Task> tasks = new List<Task>();
+
+            tasks.Add(RunSubscriptionReceiver(topicName, sub1, tokenSource.Token));
+            tasks.Add(RunSubscriptionReceiver(topicName, sub2, tokenSource.Token));
+
+            Task.WaitAll(tasks.ToArray());
 
             Console.ReadKey();
-
-            await topicClient.CloseAsync();
         }
 
-        static async Task SendMessagesAsync(int numberOfMessagesToSend)
+        static async Task SendMessagesAsync(int numberOfMessagesToSend, string topicName)
         {
             try
             {
+                var sender = m_SbClient.CreateSender(topicName);
+
                 Random rnd = new Random();
 
                 for (var i = 0; i < numberOfMessagesToSend; i++)
@@ -56,13 +59,13 @@ namespace Daenet.ServiceBus.NetCore
                     // Create a new message to send to the queue.
                     string messageBody = $"{i} - Random number {num}";
 
-                    var message = new Message(Encoding.UTF8.GetBytes(messageBody));
+                    var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageBody));
 
                     // We set here some random number.
                     // In this sample, subscription filter is used
-                    message.UserProperties.Add("Number", num);
+                    message.ApplicationProperties.Add("Number", num);
 
-                    message.UserProperties.Add("Code", 2);
+                    message.ApplicationProperties.Add("Code", 2);
 
                     message.TimeToLive = TimeSpan.FromMinutes(5);
 
@@ -70,7 +73,7 @@ namespace Daenet.ServiceBus.NetCore
                     Console.WriteLine($"Sending message: {messageBody}");
 
                     // Send the message to the queue.
-                    await topicClient.SendAsync(message);
+                    await sender.SendMessageAsync(message);
                 }
             }
             catch (Exception exception)
@@ -80,54 +83,58 @@ namespace Daenet.ServiceBus.NetCore
         }
 
 
-        static void RegisterMessageHandlerAndReceiveMessages()
+        //static void RegisterMessageHandlerAndReceiveMessages()
+        //{
+        //    // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
+        //    var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
+        //    {
+        //        // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
+        //        // Set it according to how many messages the application wants to process in parallel.
+        //        MaxConcurrentCalls = 1,
+
+        //        // Indicates whether the message pump should automatically complete the messages after returning from user callback.
+        //        // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
+        //        AutoComplete = false
+        //    };
+
+        //    subscriptionClient1.RegisterMessageHandler(ProcessMessagesAsync1, messageHandlerOptions);
+
+        //    subscriptionClient2.RegisterMessageHandler(ProcessMessagesAsync2, messageHandlerOptions);
+        //}
+
+        static async Task RunSubscriptionReceiver(string topicName, string subscriptionName, CancellationToken token)
         {
-            // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
-            var messageHandlerOptions = new MessageHandlerOptions(ExceptionReceivedHandler)
-            {
-                // Maximum number of concurrent calls to the callback ProcessMessagesAsync(), set to 1 for simplicity.
-                // Set it according to how many messages the application wants to process in parallel.
-                MaxConcurrentCalls = 1,
+            var receiver = m_SbClient.CreateReceiver(topicName, subscriptionName, new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
 
-                // Indicates whether the message pump should automatically complete the messages after returning from user callback.
-                // False below indicates the complete operation is handled by the user callback as in ProcessMessagesAsync().
-                AutoComplete = false
-            };
-
-            subscriptionClient1.RegisterMessageHandler(ProcessMessagesAsync1, messageHandlerOptions);
-
-            subscriptionClient2.RegisterMessageHandler(ProcessMessagesAsync2, messageHandlerOptions);
-        }
-
-        static async Task ProcessMessagesAsync1(Message message, CancellationToken token)
-        {
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+            while (token.IsCancellationRequested == false)
+            {
+                // Demonstrates how to receive a batch of messages.
+                var msgs = await receiver.ReceiveMessagesAsync(maxMessages: 100, maxWaitTime: TimeSpan.FromSeconds(30));
 
-            await subscriptionClient1.CompleteAsync(message.SystemProperties.LockToken);
+                foreach (var message in msgs)
+                {
+                    Console.WriteLine($"Received message: SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+
+                    await receiver.CompleteMessageAsync(message);
+                }
+            }
         }
 
-        static async Task ProcessMessagesAsync2(Message message, CancellationToken token)
-        {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"Received message: SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
-
-            await subscriptionClient2.CompleteAsync(message.SystemProperties.LockToken);
-        }
 
 
-        // Use this handler to examine the exceptions received on the message pump.
-        static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
-        {
-            Console.WriteLine($"Message handler encountered an exception {exceptionReceivedEventArgs.Exception}.");
-            var context = exceptionReceivedEventArgs.ExceptionReceivedContext;
-            Console.WriteLine("Exception context for troubleshooting:");
-            Console.WriteLine($"- Endpoint: {context.Endpoint}");
-            Console.WriteLine($"- Entity Path: {context.EntityPath}");
-            Console.WriteLine($"- Executing Action: {context.Action}");
-            return Task.CompletedTask;
-        }
+        //// Use this handler to examine the exceptions received on the message pump.
+        //static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
+        //{
+        //    Console.WriteLine($"Message handler encountered an exception {exceptionReceivedEventArgs.Exception}.");
+        //    var context = exceptionReceivedEventArgs.ExceptionReceivedContext;
+        //    Console.WriteLine("Exception context for troubleshooting:");
+        //    Console.WriteLine($"- Endpoint: {context.Endpoint}");
+        //    Console.WriteLine($"- Entity Path: {context.EntityPath}");
+        //    Console.WriteLine($"- Executing Action: {context.Action}");
+        //    return Task.CompletedTask;
+        //}
 
     }
 }

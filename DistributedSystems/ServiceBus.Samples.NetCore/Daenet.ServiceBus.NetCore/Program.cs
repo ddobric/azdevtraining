@@ -1,31 +1,41 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Daenet.ServiceBus.NetCore
 {
-
+    /// <summary>
+    /// Samples that demonstrates most important Service Bus features.
+    /// </summary>
     class Program
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
+        static async Task Main(string[] args)
         {
             Console.WriteLine("=============================================================================================");
-            Console.WriteLine("daenet GmbH, Frankfurt University of Applied Sciences - Cloud Computing & Distributed Systems");
+            Console.WriteLine("daenet GmbH - ACP Digital");
             Console.WriteLine("=============================================================================================");
+            
+            const string queueName = "queuesamples/sendreceive";
+            const string topicName = "topicsamples/sendreceive";
 
-            //SbManagementSamples.PrepareQueue("queuesamples/sendreceive", false).Wait();
-            //QueueSamples.RunAsync(10).Wait();
+            await SbManagementSamples.EnsureQueueExists(queueName, false);
+            await QueueSamples.RunAsync(10, queueName);
 
-            //SbManagementSamples.PrepareQueue("queuesamples/sendreceive", true).Wait();
-            //QueueSessionSamples.RunAsync(10).Wait();
+            await SbManagementSamples.EnsureQueueExists(queueName, true);
+            await QueueSessionSamples.RunAsync(10);
 
-            //DeadLetterMessagingSamples.RunAsync(10).Wait();
+            await DeadLetterMessagingSamples.RunAsync(10, queueName);
 
-            //QueueReliableMessagingSamples.RunAsync(10).Wait();
+            await QueueReliableMessagingSamples.RunAsync(10, queueName);
 
-            // SbManagementSamples.PrepareTopic("topicsamples/sendreceive", false).Wait();
-            //TopicSample.RunAsync(100).Wait();
+            await SbManagementSamples.EnsureTopicExists(topicName, "subscription1", "subscription2", false);
+            await TopicSample.RunAsync(100, topicName, "subscription1", "subscription2");
 
-            SbManagementSamples.CreateTopic("topicsamples/sendreceive", true).Wait();
-            TopicSessionSample.RunAsync(10).Wait();
+            await SbManagementSamples.EnsureTopicExists(topicName, "subscription1", "subscription2", true);
+            await TopicSessionSample.RunAsync(10);
         }
     }
 }

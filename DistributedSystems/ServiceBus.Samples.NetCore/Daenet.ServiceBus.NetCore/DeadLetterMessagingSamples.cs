@@ -18,14 +18,10 @@ namespace Daenet.ServiceBus.NetCore
     {
         private static CancellationTokenSource tokenSource;
         
-        const string m_QueueName = "queuesamples/sendreceive";
-
         /// <summary>
         /// Client for sending and receiving queue messages.
         /// </summary>
         static ServiceBusClient m_SbClient;
-
-        //static IQueueClient m_DLClient;
 
         /// <summary>
         /// Start sending of messages.
@@ -33,34 +29,35 @@ namespace Daenet.ServiceBus.NetCore
         /// <param name="numberOfMessages"></param>
         /// <param name="autoComplete">True if messaging is none reliable. Use false for reliable messaging.</param>
         /// <returns></returns>
-        public static async Task RunAsync(int numberOfMessages)
+        public static async Task RunAsync(int numberOfMessages, string queueName)
         {
             tokenSource = new CancellationTokenSource();
 
             ServiceBusClientOptions opts = new ServiceBusClientOptions
             {
-             RetryOptions = new ServiceBusRetryOptions {  MaxRetries = 3, MaxDelay = TimeSpan.FromMinutes(3), Delay = TimeSpan.FromMinutes(1)}
+                RetryOptions = new ServiceBusRetryOptions {  MaxRetries = 3, MaxDelay = TimeSpan.FromMinutes(3), Delay = TimeSpan.FromMinutes(1)}
             };
            
             m_SbClient = new ServiceBusClient(Credentials.Current.ConnStr, opts);
 
             Console.WriteLine("Press any key to start receiver...");
+
             Console.ReadKey();
 
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             if (numberOfMessages > 100)
-                await SendMessageBatchAsync(numberOfMessages);
+                await SendMessageBatchAsync(numberOfMessages, queueName);
             else
-                await SendMessagesAsync(numberOfMessages);
+                await SendMessagesAsync(numberOfMessages, queueName);
 
-            await RunReceiver(tokenSource.Token);
+            await RunReceiver(queueName, tokenSource.Token);
 
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("Press any key to start receiver...");
             Console.ReadKey();
 
-            RegisterOnMDLQessageHandlerAndReceiveMessages();
+            await RunDeadLetterQueueReceiver(queueName, tokenSource.Token);
 
             Console.ReadKey();
         }
@@ -70,10 +67,12 @@ namespace Daenet.ServiceBus.NetCore
         /// </summary>
         /// <param name="numberOfMessagesToSend"></param>
         /// <returns></returns>
-        static async Task SendMessagesAsync(int numberOfMessagesToSend)
+        static async Task SendMessagesAsync(int numberOfMessagesToSend, string queueName)
         {
             try
             {
+                var sender = m_SbClient.CreateSender(queueName);
+
                 for (var i = 0; i < numberOfMessagesToSend; i++)
                 {
                     // Create a new message to send to the queue.
@@ -84,8 +83,6 @@ namespace Daenet.ServiceBus.NetCore
                     message.TimeToLive = TimeSpan.FromMinutes(10);
 
                     Console.WriteLine($"Sending message: {messageBody}");
-
-                    var sender = m_SbClient.CreateSender(m_QueueName);
 
                     // Send the message to the queue.
                     await sender.SendMessageAsync(message);
@@ -98,11 +95,11 @@ namespace Daenet.ServiceBus.NetCore
         }
 
         /// <summary>
-        /// Send message by message to the queue.
+        /// Sends a batch of messages to the queue.
         /// </summary>
         /// <param name="numberOfMessagesToSend"></param>
         /// <returns></returns>
-        static async Task SendMessageBatchAsync(int numberOfMessagesToSend)
+        static async Task SendMessageBatchAsync(int numberOfMessagesToSend, string queueName)
         {
             try
             {
@@ -119,10 +116,25 @@ namespace Daenet.ServiceBus.NetCore
                     messages.Add(message);
                 }
 
-                var sender = m_SbClient.CreateSender(m_QueueName);
+                var sender = m_SbClient.CreateSender(queueName);
 
-                // Send the message to the queue.
-                await sender.SendMessageAsync(message);
+                // Send messages to the queue.
+                await sender.SendMessagesAsync(messages);
+
+                //
+                // Another way to send batch of messages is to use ServiceBusMessageBatch.
+                //
+
+                using (ServiceBusMessageBatch messageBatch = await sender.CreateMessageBatchAsync())
+                {
+                    foreach (var message in messages)
+                    {
+                        if (!messageBatch.TryAddMessage(message))
+                            break;
+                    }
+                   
+                    await sender.SendMessagesAsync(messageBatch);
+                }
             }
             catch (Exception exception)
             {
@@ -182,10 +194,9 @@ namespace Daenet.ServiceBus.NetCore
         /// <param name="message"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        static async Task RunReceiver(CancellationToken token)
+        static async Task RunReceiver(string queueName, CancellationToken token)
         {
-            ServiceBusReceiver receiver = m_SbClient.CreateReceiver($"{m_QueueName}/$DeadLetterQueue",
-            new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
+            ServiceBusReceiver receiver = m_SbClient.CreateReceiver($"{queueName}/$DeadLetterQueue", new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
 
             while (token.IsCancellationRequested == false)
             {
@@ -233,27 +244,28 @@ namespace Daenet.ServiceBus.NetCore
         /// <param name="message"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        static async Task ProcessDLQAsync(CancellationToken token)
+        static async Task RunDeadLetterQueueReceiver(string queueName, CancellationToken token)
         {
-            ServiceBusReceiver receiver = m_SbClient.CreateReceiver($"{m_QueueName}/$DeadLetterQueue",
-              new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
-
+            ServiceBusReceiver receiver = m_SbClient.CreateReceiver($"{queueName}/$DeadLetterQueue", new ServiceBusReceiverOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock });
 
             while (token.IsCancellationRequested == false)
             {
-                var msg = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30));
+                // Demonstrates how to receive a batch of messages.
+                var msgs = await receiver.ReceiveMessagesAsync(maxMessages:100, maxWaitTime: TimeSpan.FromSeconds(30));
 
+                foreach (var msg in msgs)
+                {
+                    // Process the message.
+                    Console.WriteLine($"Received message: SequenceNumber:{msg.SequenceNumber} Body:{Encoding.UTF8.GetString(msg.Body)}");
 
-                // Process the message.
-                Console.WriteLine($"Received message: SequenceNumber:{msg.SequenceNumber} Body:{Encoding.UTF8.GetString(msg.Body)}");
+                    var json = Encoding.UTF8.GetString(msg.Body);
 
-                var json = Encoding.UTF8.GetString(msg.Body);
+                    Transfer transferObj = JsonConvert.DeserializeObject<Transfer>(json);
 
-                Transfer transferObj = JsonConvert.DeserializeObject<Transfer>(json);
+                    Console.WriteLine($"Ammount: {transferObj.amount}, From:{transferObj.fromAccount}, To: {transferObj.toAccount}.");
 
-                Console.WriteLine($"Ammount: {transferObj.amount}, From:{transferObj.fromAccount}, To: {transferObj.toAccount}.");
-
-                await receiver.CompleteMessageAsync(msg);
+                    await receiver.CompleteMessageAsync(msg);
+                }
             }
         }
 

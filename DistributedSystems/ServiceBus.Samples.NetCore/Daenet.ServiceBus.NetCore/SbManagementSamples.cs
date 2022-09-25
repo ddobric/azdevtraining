@@ -1,7 +1,5 @@
 ﻿
 using Azure.Messaging.ServiceBus.Administration;
-using Microsoft.Azure.ServiceBus;
-using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
 using System.Collections.Generic;
@@ -16,7 +14,7 @@ namespace Daenet.ServiceBus.NetCore
         /// Demonstrates how to create a new queue or to return existing one.
         /// </summary>
         /// <param name="qName">The name/path pf the queue.</param>
-        public static async Task<QueueProperties> CreateQueue(string queueName, bool requireSession = false)
+        public static async Task<QueueProperties> EnsureQueueExists(string queueName, bool requireSession = false)
         {
             ServiceBusAdministrationClient mgmClient = new ServiceBusAdministrationClient(Credentials.Current.ConnStr);
 
@@ -26,9 +24,7 @@ namespace Daenet.ServiceBus.NetCore
             {
                 var options = new CreateQueueOptions(queueName)
                 {
-                    // Duration of idle interval after which the queue is automatically deleted. 
                     AutoDeleteOnIdle = TimeSpan.FromDays(7),
-
                     DefaultMessageTimeToLive = TimeSpan.FromDays(2),
                     DuplicateDetectionHistoryTimeWindow = TimeSpan.FromMinutes(1),
                     EnableBatchedOperations = true,
@@ -56,7 +52,6 @@ namespace Daenet.ServiceBus.NetCore
                 }
                 else
                 {
-                    //queueDescription = await mgmClient.GetQueueAsync(qName);
                     await mgmClient.DeleteQueueAsync(queueName);
                     qProps = await mgmClient.CreateQueueAsync(options);
                 }
@@ -75,12 +70,12 @@ namespace Daenet.ServiceBus.NetCore
         /// Demonstrates how to create a new queue or to return existing one.
         /// </summary>
         /// <param name="qName">The name/path pf the queue.</param>
-        public static async Task<TopicProperties> CreateTopic(string queueName, bool requireSession = false)
+        public static async Task<TopicProperties> EnsureTopicExists(string topicName, string sub1, string sub2, bool requireSession = false)
         {
             ServiceBusAdministrationClient mgmClient = new ServiceBusAdministrationClient(Credentials.Current.ConnStr);
             TopicProperties tProps;
 
-            var options = new CreateTopicOptions(queueName)
+            var options = new CreateTopicOptions(topicName)
             {
                 // Duration of idle interval after which the queue is automatically deleted. 
                 AutoDeleteOnIdle = TimeSpan.FromDays(7),
@@ -98,24 +93,33 @@ namespace Daenet.ServiceBus.NetCore
                 UserMetadata = "some metadata"
             };
 
-            if (mgmClient.TopicExistsAsync(queueName).Result)
+            if (mgmClient.TopicExistsAsync(topicName).Result)
             {
-                await mgmClient.DeleteTopicAsync(queueName);
+                await mgmClient.DeleteTopicAsync(topicName);
             }
 
             tProps = await mgmClient.CreateTopicAsync(options);
 
-            return tProps;
+            await CreateSubscriptions(topicName, sub1, sub2, requireSession, true);
 
+            return tProps;
         }
 
 
-
-        private static async Task<SubscriptionProperties> CreateSubscription(string topicName, string path, string sName, bool requireSession, bool createRules = false)
+        private static async Task CreateSubscriptions(string topicName,  string s1Name, string s2Name, bool requireSession, bool createRules = false)
         {
             ServiceBusAdministrationClient mgmClient = new ServiceBusAdministrationClient(Credentials.Current.ConnStr);
           
-            var options = new CreateSubscriptionOptions(topicName, sName)
+            var subOpts1= new CreateSubscriptionOptions(topicName, s1Name)
+            {
+                AutoDeleteOnIdle = TimeSpan.FromDays(7),
+                DefaultMessageTimeToLive = TimeSpan.FromDays(2),
+                EnableBatchedOperations = true,
+                UserMetadata = "some metadata",
+                RequiresSession = requireSession
+            };
+
+            var subOpts2 = new CreateSubscriptionOptions(topicName, s2Name)
             {
                 AutoDeleteOnIdle = TimeSpan.FromDays(7),
                 DefaultMessageTimeToLive = TimeSpan.FromDays(2),
@@ -125,12 +129,21 @@ namespace Daenet.ServiceBus.NetCore
             };
 
 
-            if (await mgmClient.SubscriptionExistsAsync(topicName, sName))
+            if (await mgmClient.SubscriptionExistsAsync(topicName, s1Name))
             {
-                await mgmClient.DeleteSubscriptionAsync(topicName, sName);
+                await mgmClient.DeleteSubscriptionAsync(topicName, s1Name);
             }
 
-            SubscriptionProperties subProps = await mgmClient.CreateSubscriptionAsync(options);
+
+            if (await mgmClient.SubscriptionExistsAsync(topicName, s2Name))
+            {
+                await mgmClient.DeleteSubscriptionAsync(topicName, s2Name);
+            }
+
+            await mgmClient.CreateSubscriptionAsync(subOpts1);
+
+            await mgmClient.CreateSubscriptionAsync(subOpts2);
+                     
             if (createRules)
             {
                 CreateRuleOptions ruleOpts1 = new CreateRuleOptions
@@ -139,16 +152,16 @@ namespace Daenet.ServiceBus.NetCore
                     Filter = new SqlRuleFilter($"Num<{int.MaxValue / 2}"),
                 };
 
-                await mgmClient.CreateRuleAsync(topicName, sName, ruleOpts1);
+                await mgmClient.CreateRuleAsync(topicName, s1Name, ruleOpts1);
 
                 CreateRuleOptions ruleOpts2 = new CreateRuleOptions
                 {
                     Name = "GreaterThan",
                     Filter = new SqlRuleFilter($"Num>={int.MaxValue / 2}"),
                 };
-            }
 
-            return subProps;
+                await mgmClient.CreateRuleAsync(topicName, s2Name, ruleOpts2);
+            }
         }
     }
 }
