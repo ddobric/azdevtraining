@@ -48,7 +48,7 @@ namespace Daenet.ServiceBus.NetCore
             Console.ReadKey();
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            RunnMessageReceiverWithProcesor(queueName);
+            await RunMessageReceiverWithProcesor(queueName, tokenSource.Token);
 
             Console.ReadKey();
         }
@@ -128,7 +128,7 @@ namespace Daenet.ServiceBus.NetCore
         /// <summary>
         /// Register two handlers: Message Receive- and Error-handler.
         /// </summary>
-        static void RunnMessageReceiverWithProcesor(string queueName)
+        static async Task RunMessageReceiverWithProcesor(string queueName, CancellationToken token)
         {
             // Configure the message handler options in terms of exception handling, number of concurrent messages to deliver, etc.
             var options = new ServiceBusProcessorOptions
@@ -147,7 +147,9 @@ namespace Daenet.ServiceBus.NetCore
             processor = m_SbClient.CreateProcessor(queueName, options);
 
             processor.ProcessMessageAsync += ProcessMessagesAsync;
-            processor.ProcessMessageAsync += ProcessMessagesAsync;       
+            processor.ProcessErrorAsync += ProcessMessageErrorAsync;       
+
+            await processor.StartProcessingAsync(token);
         }
 
 

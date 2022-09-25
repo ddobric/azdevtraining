@@ -9,7 +9,7 @@ namespace Daenet.ServiceBus.NetCore
 {
     public class Credentials
     {
-        private static string m_SbConnStr = "Endpoint=sb://aztraining.servicebus.windows.net/;SharedAccessKeyName=demo;SharedAccessKey=4+1wNSkzXNbkxgN2T+plmJ8uCuAlAeP6+qm/AjJAa6M=";
+        private static string m_SbConnStr = "Endpoint=sb://azdevtraining.servicebus.windows.net/;SharedAccessKeyName=devtraining;SharedAccessKey=RrbBT6MLiyljKCT0+klHG/hPMJOhKYzS+0T2hlTyOXM=";
 
         static Credentials()
         {

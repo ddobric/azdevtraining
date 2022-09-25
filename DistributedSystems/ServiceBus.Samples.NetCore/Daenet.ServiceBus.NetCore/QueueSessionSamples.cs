@@ -45,7 +45,7 @@ namespace Daenet.ServiceBus.NetCore
                     // Create a new message to send to the queue.
                     string messageBody = $"Message {i}";
                     var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageBody));
-                    message.ApplicationProperties.Add("USECASE", "Session Sample");
+                    message.ApplicationProperties.Add("USECASE", "Queue Session Sample");
                     message.TimeToLive = TimeSpan.FromMinutes(10);
                     if (sessId != null)
                         message.SessionId = sessId;
@@ -73,29 +73,32 @@ namespace Daenet.ServiceBus.NetCore
             sessions.Add("S2");
             sessions.Add("S3");
 
-            foreach (var sess in sessions)
+            while (!token.IsCancellationRequested)
             {
-                tasks.Add(Task.Run(async () =>
+                foreach (var sess in sessions)
                 {
-                    // create a session receiver that we can use to receive the message. Since we don't specify a
-                    // particular session, we will get the next available session from the service.
-                    ServiceBusSessionReceiver sessReceiver = await m_SbClient.AcceptSessionAsync(queueName, sess);
-
-                    while (true)
+                    tasks.Add(Task.Run(async () =>
                     {
-                        var message = await sessReceiver.ReceiveMessageAsync();
-                    
-                        if (message != null)
+                        // create a session receiver that we can use to receive the message. Since we don't specify a
+                        // particular session, we will get the next available session from the service.
+                        ServiceBusSessionReceiver sessReceiver = await m_SbClient.AcceptSessionAsync(queueName, sess);
+
+                        while (true)
                         {
-                            Console.WriteLine($"Received message: SessionId:{message.SessionId}, SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
-                            await sessReceiver.CompleteMessageAsync(message);
+                            var message = await sessReceiver.ReceiveMessageAsync();
+
+                            if (message != null)
+                            {
+                                Console.WriteLine($"Received message: SessionId:{message.SessionId}, SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+                                await sessReceiver.CompleteMessageAsync(message);
+                            }
+                            else
+                            {
+                                Console.WriteLine("no messages..");
+                            }
                         }
-                        else
-                        {  
-                            Console.WriteLine("no messages..");
-                        }
-                    }
-                }));
+                    }));
+                }
             }
 
             Task.WaitAll(tasks.ToArray());

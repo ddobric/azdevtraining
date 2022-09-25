@@ -21,6 +21,7 @@ namespace Daenet.ServiceBus.NetCore
             const string queueName = "queuesamples/sendreceive";
             const string queueNameSession = "queuesamples/sendreceive-session";
             const string topicName = "topicsamples/sendreceive";
+            const string topicNameSession = "topicsamples/sendreceive-session";
 
             await SbManagementSamples.EnsureQueueExists(queueName, false);
             await QueueSamples.RunAsync(10, queueName);
@@ -35,8 +36,8 @@ namespace Daenet.ServiceBus.NetCore
             await SbManagementSamples.EnsureTopicExists(topicName, "subscription1", "subscription2", false);
             await TopicSample.RunAsync(100, topicName, "subscription1", "subscription2");
 
-            await SbManagementSamples.EnsureTopicExists(topicName, "subscription1", "subscription2", true);
-            await TopicSessionSample.RunAsync(10);
+            await SbManagementSamples.EnsureTopicExists(topicNameSession, "session-subscription1", "session-subscription2", true);
+            await TopicSessionSample.RunAsync(10, topicNameSession, "session-subscription1", "session-subscription2");
         }
     }
 }
