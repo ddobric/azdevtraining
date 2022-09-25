@@ -13,11 +13,9 @@ namespace Client
             Console.WriteLine("Enter lines of text to send to the server with ENTER");
 
             // Create a new hybrid connection client
-            var client = new HybridConnectionClient("Endpoint=sb://azuretrainingrelay.servicebus.windows.net/;SharedAccessKeyName=pubsub;SharedAccessKey=LKFppG1sXJ1FAzbtEok2Ij4vaoDo5AQ0WYTN2vybU10=;EntityPath=hyco");
+            var client = new HybridConnectionClient("Endpoint=sb://azuretrainingrelay.servicebus.windows.net/;SharedAccessKeyName=dev;SharedAccessKey=tCAjmo1nvs/9OPRy9dtXSfFL5tep7QQECSou7j/0B2I=;EntityPath=hyco");
 
-            // Initiate the connection
-            var relayConnection = await client.CreateConnectionAsync();
-
+            HybridConnectionStream relayConnection = await client.CreateConnectionAsync(); 
 
             // We run two conucrrent loops on the connection. One 
             // reads input from the console and writes it to the connection 
@@ -31,6 +29,7 @@ namespace Client
             {
                 while (true)
                 {
+                 
                     // initialize the stream reader over the connection
                     try
                     {
@@ -39,7 +38,6 @@ namespace Client
                         var writer = Console.Out;
                         do
                         {
-
                             Console.ForegroundColor = ConsoleColor.Green;
                             // read a full line of UTF-8 text up to newline
                             string line = await reader.ReadLineAsync();
@@ -54,7 +52,7 @@ namespace Client
                     }
                     catch (Exception ex)
                     {
-
+                        relayConnection = await client.CreateConnectionAsync();
                     }
                 }
             });

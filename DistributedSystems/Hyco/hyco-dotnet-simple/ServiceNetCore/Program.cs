@@ -12,7 +12,7 @@ namespace Server
         {
             var cts = new CancellationTokenSource();
 
-            var listener = new HybridConnectionListener("Endpoint=sb://azuretrainingrelay.servicebus.windows.net/;SharedAccessKeyName=pubsub;SharedAccessKey=LKFppG1sXJ1FAzbtEok2Ij4vaoDo5AQ0WYTN2vybU10=;EntityPath=hyco");
+            var listener = new HybridConnectionListener("Endpoint=sb://azuretrainingrelay.servicebus.windows.net/;SharedAccessKeyName=dev;SharedAccessKey=tCAjmo1nvs/9OPRy9dtXSfFL5tep7QQECSou7j/0B2I=;EntityPath=hyco");
 
             // Subscribe to the status events
             listener.Connecting += (o, e) =>
@@ -67,7 +67,9 @@ namespace Server
                     // that allows us to read UTF-8 text data that comes from 
                     // the sender and to write text replies back.
                     var reader = new StreamReader(relayConnection);
+
                     var writer = new StreamWriter(relayConnection) { AutoFlush = true };
+
                     do
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;

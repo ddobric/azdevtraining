@@ -62,7 +62,7 @@ namespace Client
                     }
                     catch (Exception ex)
                     {
-
+                        Console.WriteLine(ex.ToString());
                     }
                 }
             });
