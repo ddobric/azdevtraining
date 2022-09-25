@@ -1,4 +1,4 @@
-﻿using Microsoft.Azure.ServiceBus;
+﻿using Azure.Messaging.ServiceBus;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,38 +9,43 @@ namespace Daenet.ServiceBus.NetCore
 {
     internal class QueueSessionSamples
     {
-        const string m_QueueName = "topicsamples/sendreceive";
+        private static CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-        static IQueueClient m_QueueClient;
+        /// <summary>
+        /// Client for sending and receiving queue messages.
+        /// </summary>
+        static ServiceBusClient m_SbClient;
 
-        static ISessionClient m_SessionClient;
-
-        public static async Task RunAsync(int numberOfMessages)
+        public static async Task RunAsync(int numberOfMessages, string queueName)
         {
+            ServiceBusClientOptions opts = new ServiceBusClientOptions
+            {
+                RetryOptions = new ServiceBusRetryOptions { MaxRetries = 3, MaxDelay = TimeSpan.FromMinutes(3), Delay = TimeSpan.FromMinutes(1) }
+            };
 
-            m_QueueClient = new QueueClient(Credentials.Current.ConnStr, m_QueueName);
-            m_SessionClient = new SessionClient(Credentials.Current.ConnStr, m_QueueName, receiveMode: ReceiveMode.PeekLock);
-            await SendMessagesAsync(numberOfMessages, "S1");
-            await SendMessagesAsync(numberOfMessages, "S2");
-            await SendMessagesAsync(numberOfMessages, "S3");
+            m_SbClient = new ServiceBusClient(Credentials.Current.ConnStr, opts);
 
-            RunReceivers();
+            await SendMessagesAsync(numberOfMessages, "S1", queueName);
+            await SendMessagesAsync(numberOfMessages, "S2", queueName);
+            await SendMessagesAsync(numberOfMessages, "S3", queueName);
+
+            RunSessionReceivers(queueName, tokenSource.Token);
 
             Console.ReadKey();
-
-            await m_QueueClient.CloseAsync();
         }
 
-        static async Task SendMessagesAsync(int numberOfMessagesToSend, string sessId = null)
+        static async Task SendMessagesAsync(int numberOfMessagesToSend, string sessId, string queueName)
         {
             try
             {
+                var sender = m_SbClient.CreateSender(queueName);
+
                 for (var i = 0; i < numberOfMessagesToSend; i++)
                 {
                     // Create a new message to send to the queue.
                     string messageBody = $"Message {i}";
-                    var message = new Message(Encoding.UTF8.GetBytes(messageBody));
-                    message.UserProperties.Add("USECASE", "Session Sample");
+                    var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageBody));
+                    message.ApplicationProperties.Add("USECASE", "Session Sample");
                     message.TimeToLive = TimeSpan.FromMinutes(10);
                     if (sessId != null)
                         message.SessionId = sessId;
@@ -49,7 +54,7 @@ namespace Daenet.ServiceBus.NetCore
                     Console.WriteLine($"Sending message: {messageBody}");
 
                     // Send the message to the queue.
-                    await m_QueueClient.SendAsync(message);
+                    await sender.SendMessageAsync(message);
                 }
             }
             catch (Exception exception)
@@ -59,30 +64,34 @@ namespace Daenet.ServiceBus.NetCore
         }
 
 
-        static void RunReceivers()
+        static void RunSessionReceivers(string queueName, CancellationToken token)
         {
             List<Task> tasks = new List<Task>();
 
-            for (int i = 0; i < 3; i++)
+            List<string> sessions = new List<string>();
+            sessions.Add("S1");
+            sessions.Add("S2");
+            sessions.Add("S3");
+
+            foreach (var sess in sessions)
             {
                 tasks.Add(Task.Run(async () =>
                 {
-                    // Register the function that processes messages.
-                    var session = await m_SessionClient.AcceptMessageSessionAsync();
+                    // create a session receiver that we can use to receive the message. Since we don't specify a
+                    // particular session, we will get the next available session from the service.
+                    ServiceBusSessionReceiver sessReceiver = await m_SbClient.AcceptSessionAsync(queueName, sess);
 
                     while (true)
                     {
-                        var message = await session.ReceiveAsync();
+                        var message = await sessReceiver.ReceiveMessageAsync();
+                    
                         if (message != null)
                         {
-                            Console.WriteLine($"Received message: SessionId:{message.SessionId}, SequenceNumber:{message.SystemProperties.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
-                            await session.CompleteAsync(message.SystemProperties.LockToken);
+                            Console.WriteLine($"Received message: SessionId:{message.SessionId}, SequenceNumber:{message.SequenceNumber} Body:{Encoding.UTF8.GetString(message.Body)}");
+                            await sessReceiver.CompleteMessageAsync(message);
                         }
                         else
-                        {
-                            await session.CloseAsync();
-                            // TODO. We do need here try catch if no session found.
-                            session = await m_SessionClient.AcceptMessageSessionAsync();
+                        {  
                             Console.WriteLine("no messages..");
                         }
                     }
@@ -91,19 +100,5 @@ namespace Daenet.ServiceBus.NetCore
 
             Task.WaitAll(tasks.ToArray());
         }
-
-
-        // Use this handler to examine the exceptions received on the message pump.
-        static Task ExceptionReceivedHandler(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
-        {
-            Console.WriteLine($"Message handler encountered an exception {exceptionReceivedEventArgs.Exception}.");
-            var context = exceptionReceivedEventArgs.ExceptionReceivedContext;
-            Console.WriteLine("Exception context for troubleshooting:");
-            Console.WriteLine($"- Endpoint: {context.Endpoint}");
-            Console.WriteLine($"- Entity Path: {context.EntityPath}");
-            Console.WriteLine($"- Executing Action: {context.Action}");
-            return Task.CompletedTask;
-        }
-
     }
 }

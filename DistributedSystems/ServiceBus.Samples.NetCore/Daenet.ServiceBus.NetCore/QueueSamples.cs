@@ -19,7 +19,6 @@ namespace Daenet.ServiceBus.NetCore
     {
         private static CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-
         /// <summary>
         /// Client for sending and receiving queue messages.
         /// </summary>

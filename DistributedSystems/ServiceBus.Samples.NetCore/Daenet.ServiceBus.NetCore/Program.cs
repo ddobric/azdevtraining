@@ -19,13 +19,14 @@ namespace Daenet.ServiceBus.NetCore
             Console.WriteLine("=============================================================================================");
             
             const string queueName = "queuesamples/sendreceive";
+            const string queueNameSession = "queuesamples/sendreceive-session";
             const string topicName = "topicsamples/sendreceive";
 
             await SbManagementSamples.EnsureQueueExists(queueName, false);
             await QueueSamples.RunAsync(10, queueName);
 
-            await SbManagementSamples.EnsureQueueExists(queueName, true);
-            await QueueSessionSamples.RunAsync(10);
+            await SbManagementSamples.EnsureQueueExists(queueNameSession, true);
+            await QueueSessionSamples.RunAsync(10, queueNameSession);
 
             await DeadLetterMessagingSamples.RunAsync(10, queueName);
 
