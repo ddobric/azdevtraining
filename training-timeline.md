@@ -7,7 +7,7 @@ Mid morning break
 ### 🕥 12:30-13:30
 Lunch
 
-### 🕥 15:00-15:00
+### 🕥 15:00-15:30
 Mid afternoon break
 
 ### 🕥  17.00
