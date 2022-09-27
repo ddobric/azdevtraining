@@ -5,7 +5,7 @@ VisualStudioVersion = 17.3.32804.467
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DurableFunctionApp.Net31", "DurableFunctionApp\DurableFunctionApp.Net31.csproj", "{FAA8BA59-F75C-4772-97AB-2FB6A33191FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DurableFunctionApp.Net60", "DurableFunctionApp.Net60\DurableFunctionApp.Net60.csproj", "{17B035B5-06B5-435A-863C-0B54AF211002}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DurableFunctionApp.Net60", "DurableFunctionApp.Net60\DurableFunctionApp.Net60.csproj", "{17B035B5-06B5-435A-863C-0B54AF211002}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
