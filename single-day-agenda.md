@@ -38,6 +38,7 @@
 
 ## Working with Azure OpenAI
 · Azure OpenAIand Large Language Models concept
+
 · Microsoft Semantic Kernel
 
 
