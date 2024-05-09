@@ -6,7 +6,7 @@ using System.IO;
 namespace WebJobsSample
 {
     public class Functions
-    { 
+    {
 
         /// <summary>
         /// Multiple triggers.
@@ -19,16 +19,24 @@ namespace WebJobsSample
         /// <param name="message"></param>
         /// <param name="myBlob"></param>
         /// <param name="logger"></param>
-        public static void ProcessQueueMessage(
+        public static void ProcessQueueMessage1(
             [QueueTrigger("jobqueue")] string message,
             [Blob("democontainer/{queueTrigger}", FileAccess.Read, Connection = "StorageConnStr")] Stream myBlob, ILogger logger)
         {
             logger.LogInformation($"Blob name:{message} \n Size: {myBlob?.Length} bytes");
 
-            using (StreamReader sr = new StreamReader(myBlob))
+            if (myBlob != null)
             {
-                Console.WriteLine(sr.ReadToEnd());
+                using (StreamReader sr = new StreamReader(myBlob))
+                {
+                    Console.WriteLine(sr.ReadToEnd());
+                }
             }
+        }
+
+        public static void ProcessQueueMessage2([QueueTrigger("queue")] string message, ILogger logger)
+        {
+            logger.LogInformation(message);
         }
     }
 }

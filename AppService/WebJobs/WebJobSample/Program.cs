@@ -12,10 +12,7 @@ namespace WebJobSample
         {
             var builder = new HostBuilder();
             builder.UseEnvironment(EnvironmentName.Development);
-            builder.ConfigureWebJobs(b =>
-            {
-                b.AddAzureStorageCoreServices();
-            });
+        
             builder.ConfigureLogging((context, b) =>
             {
                 b.AddConsole();
@@ -23,8 +20,11 @@ namespace WebJobSample
             builder.ConfigureWebJobs(b =>
             {
                 b.AddAzureStorageCoreServices();
-                b.AddAzureStorage();
+                b.AddAzureStorageQueues();
+                b.AddAzureStorageBlobs();
             });
+
+         
             var host = builder.Build();
             using (host)
             {                
