@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace FunctionApp1
 {
-    public class Function2
+    public class QueueFunction
     {
-        [FunctionName("Function2")]
+        [FunctionName("QueueFunction")]
         public void Run([QueueTrigger("myqueue-items", Connection = "AzureWebJobsStorage")]string myQueueItem, ILogger log)
         {
             log.LogInformation($"C# Queue trigger function processed: {myQueueItem}");
