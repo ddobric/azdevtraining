@@ -11,22 +11,21 @@ namespace DurableFunctionApp.Net60
 {
     public static class SequenceExecutionFunction
     {
-        [FunctionName("SequenceExecutionFunction")]
+        [FunctionName(nameof(SequenceExecutionFunction))]
         public static async Task<List<string>> RunOrchestrator(
             [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var outputs = new List<string>();
 
             // Replace "hello" with the name of your Durable Activity Function.
-            outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "Frankfurt"));
-            outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "Seattle"));
-            outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "London"));
+            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Frankfurt"));
+            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Sarajevo"));
+            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Seattle"));
 
-            // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
             return outputs;
         }
 
-        [FunctionName("Function1_Hello")]
+        [FunctionName(nameof(SayHello))]
         public static string SayHello([ActivityTrigger] string name, ILogger log)
         {
             log.LogInformation($"Saying hello to {name}.");

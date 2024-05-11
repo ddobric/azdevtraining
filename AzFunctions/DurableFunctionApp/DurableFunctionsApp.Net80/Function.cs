@@ -4,54 +4,52 @@ using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
-namespace FunctionApp2
+namespace DurableFunctionsApp.Net80
 {
-    public static class Function2
+    public static class Function
     {
-        [Function(nameof(Function2))]
+        [Function(nameof(Function))]
         public static async Task<List<string>> RunOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context)
         {
-            ILogger logger = context.CreateReplaySafeLogger(nameof(Function2));
+            ILogger logger = context.CreateReplaySafeLogger(nameof(Function));
             logger.LogInformation("Saying hello.");
             var outputs = new List<string>();
 
             // Replace name and input with values relevant for your Durable Functions Activity
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Tokyo"));
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "Seattle"));
-            outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), "London"));
+            outputs.Add(await context.CallActivityAsync<string>(nameof(ExecAction), "AAAA"));
+            outputs.Add(await context.CallActivityAsync<string>(nameof(ExecAction), "BBBB"));
+            outputs.Add(await context.CallActivityAsync<string>(nameof(ExecAction), "CCCC"));
 
             // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
             return outputs;
         }
 
-        [Function(nameof(SayHello))]
-        public static string SayHello([ActivityTrigger] string name, FunctionContext executionContext)
+        [Function(nameof(ExecAction))]
+        public static string ExecAction([ActivityTrigger] string name, FunctionContext executionContext)
         {
-            ILogger logger = executionContext.GetLogger("SayHello");
+            ILogger logger = executionContext.GetLogger("ExecAction");
             logger.LogInformation("Saying hello to {name}.", name);
             return $"Hello {name}!";
         }
 
-        [Function("Function2_HttpStart")]
+        [Function("Function_HttpStart")]
         public static async Task<HttpResponseData> HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
             [DurableClient] DurableTaskClient client,
             FunctionContext executionContext)
         {
-            ILogger logger = executionContext.GetLogger("Function2_HttpStart");
+            ILogger logger = executionContext.GetLogger("Function_HttpStart");
 
             // Function input comes from the request content.
             string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
-                nameof(Function2));
+                nameof(Function));
 
             logger.LogInformation("Started orchestration with ID = '{instanceId}'.", instanceId);
 
             // Returns an HTTP 202 response with an instance management payload.
             // See https://learn.microsoft.com/azure/azure-functions/durable/durable-functions-http-api#start-orchestration
-            var res = client.CreateCheckStatusResponse(req, instanceId);
-
-            return res;
+            return client.CreateCheckStatusResponse(req, instanceId);
         }
     }
 }

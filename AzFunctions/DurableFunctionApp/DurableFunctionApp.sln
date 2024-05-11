@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DurableFunctionApp.Net31", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DurableFunctionApp.Net60", "DurableFunctionApp.Net60\DurableFunctionApp.Net60.csproj", "{17B035B5-06B5-435A-863C-0B54AF211002}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DurableFunctionsApp.Net80", "DurableFunctionsApp.Net80\DurableFunctionsApp.Net80.csproj", "{ABCEF596-1214-43AB-9F7F-1FABAA990F19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{17B035B5-06B5-435A-863C-0B54AF211002}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17B035B5-06B5-435A-863C-0B54AF211002}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17B035B5-06B5-435A-863C-0B54AF211002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABCEF596-1214-43AB-9F7F-1FABAA990F19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABCEF596-1214-43AB-9F7F-1FABAA990F19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABCEF596-1214-43AB-9F7F-1FABAA990F19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABCEF596-1214-43AB-9F7F-1FABAA990F19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
