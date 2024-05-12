@@ -1,18 +1,10 @@
-using DurableFunctionApp.Net80;
 using DurableFunctionsApp.Net80;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging;
-using System.IO;
 using System.Net;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
-using System.Threading;
 
 namespace DurableFunctionApp
 {
